@@ -8,9 +8,6 @@ import { Slider } from '@/components/ui/slider-number-flow';
 import { Tooltip } from '@/components/ui/tooltip-card';
 import { getUserQuotas, sendChatCompletionStream, type UserQuotaItem, type ChatMessage } from '@/lib/api';
 import { toast } from 'sonner';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import {
   MessageBranch,
   MessageBranchContent,
@@ -53,6 +50,7 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { CopyIcon, TrashIcon, EditIcon, CheckIcon as CheckIconLucide, XIcon, PlusIcon, SlidersHorizontalIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -119,8 +117,6 @@ const formatModelName = (modelName: string): string => {
 };
 
 export default function PlaygroundPage() {
-  const isMobile = useIsMobile();
-  const [configSheetOpen, setConfigSheetOpen] = useState(false);
   const [models, setModels] = useState<Array<{
     id: string;
     name: string;
@@ -413,9 +409,16 @@ export default function PlaygroundPage() {
     }
   }, [editingContent]);
 
-  // 配置面板内容组件
-  const ConfigPanel = () => (
-    <div className="space-y-12 overflow-y-auto overflow-x-hidden h-full px-1">
+  return (
+    <div className="flex gap-4 py-4 md:gap-6 md:py-6 h-[calc(100vh-var(--header-height)-2rem)] px-2 md:px-4 lg:px-6">
+      {/* 左侧：模型配置 - 桌面端 */}
+      <Card className="hidden lg:flex w-80 shrink-0 flex-col">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 pb-8">
+            模型参数
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-12 overflow-y-auto overflow-x-hidden h-full">
           {/* Temperature */}
           <div className="space-y-10">
             <Label>
@@ -449,10 +452,9 @@ export default function PlaygroundPage() {
             <Input
               id="maxTokens"
               type="number"
-              min={0}
               value={config.maxTokens}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setConfig(prev => ({ ...prev, maxTokens: Math.max(0, parseInt(e.target.value) || 0) }))
+                setConfig(prev => ({ ...prev, maxTokens: parseInt(e.target.value) }))
               }
               className="w-full"
             />
@@ -520,54 +522,116 @@ export default function PlaygroundPage() {
               aria-label="Presence Penalty"
             />
           </div>
-    </div>
-  );
-
-  return (
-    <div className="flex flex-col md:flex-row gap-4 py-2 md:py-4 md:gap-6 md:py-6 h-[calc(100vh-var(--header-height)-2rem)] px-2 md:px-4 lg:px-6">
-      {/* 桌面端：左侧配置面板 */}
-      {!isMobile && (
-        <Card className="w-80 shrink-0 flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 pb-8">
-              模型参数
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <ConfigPanel />
-          </CardContent>
-        </Card>
-      )}
+        </CardContent>
+      </Card>
 
       {/* 右侧：AI Elements 聊天界面 */}
       <div className="relative flex size-full flex-col overflow-hidden rounded-lg border bg-card">
-        {/* 移动端配置按钮 */}
-        {isMobile && (
-          <div className="absolute top-2 right-2 z-10">
-            <Sheet open={configSheetOpen} onOpenChange={setConfigSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8">
-                  <SlidersHorizontalIcon className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[85vw] sm:w-[400px] p-0">
-                <SheetHeader className="p-4 pb-0">
-                  <SheetTitle>模型参数</SheetTitle>
-                </SheetHeader>
-                <div className="p-4 overflow-y-auto h-full">
-                  <ConfigPanel />
-                </div>
-              </SheetContent>
-            </Sheet>
+        {/* 移动端：模型配置抽屉 */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="lg:hidden absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-lg bg-muted hover:bg-muted/80 transition-colors border">
+              <SlidersHorizontalIcon className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] p-0">
+          <SheetHeader className="px-6 py-4 border-b">
+            <SheetTitle>模型参数</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-12 overflow-y-auto overflow-x-hidden h-[calc(100%-4rem)] px-6 py-6">
+            {/* Temperature */}
+            <div className="space-y-10">
+              <Label>
+                <Tooltip content="控制输出的随机性。较高的值（如 1.8）会使输出更随机和创造性，较低的值（如 0.2）会使其更确定和专注。">
+                  <span className="cursor-help font-medium">Temperature</span>
+                </Tooltip>
+              </Label>
+              <Slider
+                value={[config.temperature]}
+                onValueChange={(value: number[]) => setConfig(prev => ({ ...prev, temperature: value[0] }))}
+                min={0}
+                max={2}
+                step={0.1}
+                aria-label="Temperature"
+              />
+            </div>
+
+            {/* Max Tokens */}
+            <div className="space-y-10">
+              <Label htmlFor="maxTokens-mobile">
+                <Tooltip content="生成的最大 token 数量。一个 token 大约相当于 4 个字符或 0.75 个单词。更高的值允许更长的响应，但也会增加成本和延迟。">
+                  <span className="cursor-help font-medium">Max Tokens</span>
+                </Tooltip>
+              </Label>
+              <Input
+                id="maxTokens-mobile"
+                type="number"
+                value={config.maxTokens}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfig(prev => ({ ...prev, maxTokens: parseInt(e.target.value) }))}
+                className="w-full"
+              />
+            </div>
+
+            {/* Top P */}
+            <div className="space-y-10">
+              <Label>
+                <Tooltip content="核采样参数。控制模型考虑的 token 范围。例如，0.1 意味着只考虑概率最高的 10% 的 token。较低的值使输出更确定，较高的值增加多样性。">
+                  <span className="cursor-help font-medium">Top P</span>
+                </Tooltip>
+              </Label>
+              <Slider
+                value={[config.topP]}
+                onValueChange={(value: number[]) => setConfig(prev => ({ ...prev, topP: value[0] }))}
+                min={0}
+                max={1}
+                step={0.1}
+                aria-label="Top P"
+              />
+            </div>
+
+            {/* Frequency Penalty */}
+            <div className="space-y-10">
+              <Label>
+                <Tooltip content="降低重复相同内容的可能性。正值会根据 token 在文本中出现的频率来惩罚它们，减少逐字重复的可能性。">
+                  <span className="cursor-help font-medium">Frequency Penalty</span>
+                </Tooltip>
+              </Label>
+              <Slider
+                value={[config.frequencyPenalty]}
+                onValueChange={(value: number[]) => setConfig(prev => ({ ...prev, frequencyPenalty: value[0] }))}
+                min={0}
+                max={2}
+                step={0.1}
+                aria-label="Frequency Penalty"
+              />
+            </div>
+
+            {/* Presence Penalty */}
+            <div className="space-y-10">
+              <Label>
+                <Tooltip content="增加谈论新话题的可能性。正值会根据 token 是否已经出现在文本中来惩罚它们，鼓励模型探索新的主题和概念。">
+                  <span className="cursor-help font-medium">Presence Penalty</span>
+                </Tooltip>
+              </Label>
+              <Slider
+                value={[config.presencePenalty]}
+                onValueChange={(value: number[]) => setConfig(prev => ({ ...prev, presencePenalty: value[0] }))}
+                min={0}
+                max={2}
+                step={0.1}
+                aria-label="Presence Penalty"
+              />
+            </div>
           </div>
-        )}
+          </SheetContent>
+        </Sheet>
         <StickyBanner className="bg-gradient-to-b from-blue-500 to-blue-600">
-          <p className="mx-0 text-white drop-shadow-md text-sm md:text-base">
+          <p className="mx-0 max-w-[90%] text-white drop-shadow-md">
             我们不会存储您的对话。一旦刷新，这些信息将会丢失。
           </p>
         </StickyBanner>
         <Conversation>
-          <ConversationContent className="gap-4 md:gap-8 p-2 md:p-4">
+          <ConversationContent>
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">
               </div>
@@ -637,7 +701,7 @@ export default function PlaygroundPage() {
                             )}
                           </MessageContent>
                           {editingMessageId !== version.id && streamingMessageId !== version.id && (
-                            <MessageToolbar className={`${message.from === 'user' ? 'justify-end' : ''} ${isLastMessage || isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                            <MessageToolbar className={`${message.from === 'user' ? 'justify-end' : ''} ${isLastMessage ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                               <MessageActions>
                                 <MessageAction
                                   onClick={() => handleCopyMessage(version.content)}
@@ -672,8 +736,8 @@ export default function PlaygroundPage() {
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
-        <div className="grid shrink-0 gap-2 md:gap-4 pt-2 md:pt-4">
-          <div className="w-full px-2 md:px-4 pb-2 md:pb-4">
+        <div className="grid shrink-0 gap-4 pt-4">
+          <div className="w-full px-2 md:px-4 pb-4">
             <PromptInputProvider>
               <PromptInput
                 onSubmit={handleSubmit}
@@ -707,12 +771,12 @@ export default function PlaygroundPage() {
                       open={modelSelectorOpen}
                     >
                       <ModelSelectorTrigger asChild>
-                        <PromptInputButton className="max-w-[120px] md:max-w-none">
+                        <PromptInputButton>
                           {selectedModelData?.chefSlug && (
                             <ModelSelectorLogo provider={selectedModelData.chefSlug} />
                           )}
                           {selectedModelData?.name && (
-                            <ModelSelectorName className="hidden sm:inline">
+                            <ModelSelectorName>
                               {selectedModelData.name}
                             </ModelSelectorName>
                           )}
