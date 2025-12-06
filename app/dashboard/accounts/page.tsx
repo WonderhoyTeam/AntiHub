@@ -1050,7 +1050,7 @@ export default function AccountsPage() {
                   <h3 className="text-sm font-semibold text-muted-foreground">余额信息</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">可用余额</Label>
+                      <Label className="text-xs text-muted-foreground">总可用余额</Label>
                       <p className="text-lg font-semibold text-green-600">
                         ${detailBalance.balance.available.toFixed(2)}
                       </p>
@@ -1062,16 +1062,22 @@ export default function AccountsPage() {
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">当前使用</Label>
+                      <Label className="text-xs text-muted-foreground">基础可用额度</Label>
                       <p className="text-sm font-mono">
-                        ${detailBalance.balance.current_usage.toFixed(2)}
+                        ${detailBalance.balance.base_available.toFixed(2)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">是否试用</Label>
-                      <Badge variant={detailBalance.balance.is_trial ? 'default' : 'secondary'}>
-                        {detailBalance.balance.is_trial ? '试用中' : '正式'}
-                      </Badge>
+                      <Label className="text-xs text-muted-foreground">Bonus 可用额度</Label>
+                      <p className="text-sm font-mono text-blue-600">
+                        ${detailBalance.balance.bonus_available.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">当前使用量</Label>
+                      <p className="text-sm font-mono">
+                        ${detailBalance.balance.current_usage.toFixed(2)}
+                      </p>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">重置日期</Label>
@@ -1079,47 +1085,94 @@ export default function AccountsPage() {
                         {new Date(detailBalance.balance.reset_date).toLocaleDateString('zh-CN')}
                       </p>
                     </div>
-                    {detailBalance.balance.free_trial_expiry && (
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">试用过期</Label>
-                        <p className="text-sm">
-                          {new Date(detailBalance.balance.free_trial_expiry).toLocaleDateString('zh-CN')}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* 原始数据 */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground">详细数据</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">使用限制</Label>
-                      <p className="text-sm font-mono">
-                        ${detailBalance.raw_data.usage_limit.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">免费试用限制</Label>
-                      <p className="text-sm font-mono">
-                        ${detailBalance.raw_data.free_trial_limit.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">当前使用量</Label>
-                      <p className="text-sm font-mono">
-                        ${detailBalance.raw_data.current_usage.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">免费试用使用量</Label>
-                      <p className="text-sm font-mono">
-                        ${detailBalance.raw_data.free_trial_usage.toFixed(2)}
-                      </p>
+                {/* 免费试用信息 */}
+                {detailBalance.free_trial && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground">免费试用信息</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">试用状态</Label>
+                        <Badge variant={detailBalance.free_trial.status ? 'default' : 'secondary'}>
+                          {detailBalance.free_trial.status ? '有效' : '已结束'}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">可用额度</Label>
+                        <p className="text-sm font-mono">
+                          ${detailBalance.free_trial.available.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">总限额</Label>
+                        <p className="text-sm font-mono">
+                          ${detailBalance.free_trial.limit.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">已使用</Label>
+                        <p className="text-sm font-mono">
+                          ${detailBalance.free_trial.usage.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">过期时间</Label>
+                        <p className="text-sm">
+                          {new Date(detailBalance.free_trial.expiry).toLocaleDateString('zh-CN')}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Bonus 详情 */}
+                {detailBalance.bonus_details && detailBalance.bonus_details.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Bonus 详情</h3>
+                    <div className="space-y-3">
+                      {detailBalance.bonus_details.map((bonus: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{bonus.name}</span>
+                              <Badge variant={bonus.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                                {bonus.status === 'ACTIVE' ? '有效' : '已过期'}
+                              </Badge>
+                            </div>
+                            <span className="text-sm font-mono text-green-600">
+                              ${bonus.available.toFixed(2)} 可用
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{bonus.description}</p>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">限额: </span>
+                              <span className="font-mono">${bonus.limit.toFixed(2)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">已用: </span>
+                              <span className="font-mono">${bonus.usage.toFixed(2)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">代码: </span>
+                              <span className="font-mono">{bonus.code}</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                            <div>
+                              兑换时间: {new Date(bonus.redeemed_at).toLocaleDateString('zh-CN')}
+                            </div>
+                            <div>
+                              过期时间: {new Date(bonus.expires_at).toLocaleDateString('zh-CN')}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">

@@ -1263,25 +1263,43 @@ export interface KiroOAuthAuthorizeResponse {
   };
 }
 
+export interface KiroBonusDetail {
+  type: string;
+  name: string;
+  code: string;
+  description: string;
+  usage: number;
+  limit: number;
+  available: number;
+  status: string;
+  expires_at: string;
+  redeemed_at: string;
+}
+
+export interface KiroFreeTrialInfo {
+  status: boolean;
+  usage: number;
+  limit: number;
+  available: number;
+  expiry: string;
+}
+
 export interface KiroAccountBalance {
   account_id: string;
   account_name: string;
   email: string;
   subscription: string;
+  subscription_type?: string;
   balance: {
     available: number;
     total_limit: number;
     current_usage: number;
-    is_trial: boolean;
+    base_available: number;
+    bonus_available: number;
     reset_date: string;
-    free_trial_expiry: string | null;
   };
-  raw_data: {
-    usage_limit: number;
-    free_trial_limit: number;
-    current_usage: number;
-    free_trial_usage: number;
-  };
+  free_trial?: KiroFreeTrialInfo;
+  bonus_details: KiroBonusDetail[];
 }
 
 export interface KiroConsumptionLog {
