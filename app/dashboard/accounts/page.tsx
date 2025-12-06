@@ -1127,52 +1127,6 @@ export default function AccountsPage() {
                   </div>
                 )}
 
-                {/* Bonus 详情 */}
-                {detailBalance.bonus_details && detailBalance.bonus_details.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground">Bonus 详情</h3>
-                    <div className="space-y-3">
-                      {detailBalance.bonus_details.map((bonus: any, index: number) => (
-                        <div key={index} className="border rounded-lg p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{bonus.name}</span>
-                              <Badge variant={bonus.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                                {bonus.status === 'ACTIVE' ? '有效' : '已过期'}
-                              </Badge>
-                            </div>
-                            <span className="text-sm font-mono text-green-600">
-                              ${bonus.available.toFixed(2)} 可用
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{bonus.description}</p>
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div>
-                              <span className="text-muted-foreground">限额: </span>
-                              <span className="font-mono">${bonus.limit.toFixed(2)}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">已用: </span>
-                              <span className="font-mono">${bonus.usage.toFixed(2)}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">代码: </span>
-                              <span className="font-mono">{bonus.code}</span>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                            <div>
-                              兑换时间: {new Date(bonus.redeemed_at).toLocaleDateString('zh-CN')}
-                            </div>
-                            <div>
-                              过期时间: {new Date(bonus.expires_at).toLocaleDateString('zh-CN')}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
