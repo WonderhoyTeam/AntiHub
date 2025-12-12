@@ -49,6 +49,26 @@ export interface OAuthInitiateResponse {
   state: string;
 }
 
+// OIDC Provider Types
+export interface OIDCProvider {
+  id: string;                    // 'linux_do', 'github', 'pocketid'
+  name: string;                  // 'Linux.do', 'GitHub', 'PocketID'
+  type: string;                  // 'discourse', 'github', 'oidc'
+  enabled: boolean;
+  supports_refresh: boolean;
+  description: string;
+}
+
+export interface OIDCProvidersResponse {
+  providers: OIDCProvider[];
+}
+
+export interface AuthState {
+  provider: string;
+  state: string;
+  timestamp: number;
+}
+
 export interface LogoutResponse {
   success: boolean;
   message: string;
@@ -361,68 +381,97 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
 }
 
 /**
- * 发起 SSO 登录 (Linux.do)
- * 注意: 返回的 authorization_url 会重定向到 OAuth 提供商,
- * OAuth 提供商会回调到后端配置的 redirect_uri
+ * Get available OIDC providers
+ * GET /api/auth/oidc/providers
  */
-export async function initiateSSOLogin(): Promise<OAuthInitiateResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/sso/initiate`, {
+export async function getOIDCProviders(): Promise<OIDCProvider[]> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/oidc/providers`, {
     method: 'GET',
   });
-  
-  return handleResponse<OAuthInitiateResponse>(response);
+
+  const data = await handleResponse<OIDCProvidersResponse>(response);
+  return data.providers.filter(p => p.enabled);
 }
 
 /**
- * 发起 GitHub SSO 登录
- * GET /api/auth/github/login
+ * Initiate OIDC login for any provider
+ * GET /api/auth/oidc/{provider}/login
  */
-export async function initiateGitHubLogin(): Promise<OAuthInitiateResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/github/login`, {
+export async function initiateOIDCLogin(providerId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/oidc/${providerId}/login`, {
     method: 'GET',
   });
-  
-  return handleResponse<OAuthInitiateResponse>(response);
+
+  const data = await handleResponse<OAuthInitiateResponse>(response);
+
+  // Store state for CSRF protection
+  const authState: AuthState = {
+    provider: providerId,
+    state: data.state,
+    timestamp: Date.now()
+  };
+  sessionStorage.setItem('oauth_state', JSON.stringify(authState));
+
+  // Redirect to provider
+  window.location.href = data.authorization_url;
 }
 
 /**
- * 完成 GitHub SSO 认证
- * POST /api/auth/github/callback
+ * Handle OIDC callback for any provider
+ * POST /api/auth/oidc/{provider}/callback
  */
-export async function handleGitHubCallback(code: string, state: string): Promise<LoginResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/github/callback`, {
+export async function handleOIDCCallback(
+  providerId: string,
+  code: string,
+  state: string
+): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/oidc/${providerId}/callback`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ code, state }),
   });
-  
+
   const data = await handleResponse<LoginResponse>(response);
-  
-  // 保存 token 和 refresh_token 到 localStorage
+
+  // Save tokens to localStorage
   saveAuthCredentials(data, data.user);
-  
+
   return data;
 }
 
 /**
- * OAuth 回调处理
+ * Validate OAuth state parameter (CSRF protection)
  */
-export async function handleOAuthCallback(code: string, state: string): Promise<LoginResponse> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/auth/sso/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
-    {
-      method: 'GET',
+export function validateOAuthState(receivedState: string): AuthState | null {
+  const storedStateStr = sessionStorage.getItem('oauth_state');
+  if (!storedStateStr) return null;
+
+  try {
+    const authState: AuthState = JSON.parse(storedStateStr);
+
+    // Check state match
+    if (authState.state !== receivedState) return null;
+
+    // Check expiration (10 minutes)
+    const age = Date.now() - authState.timestamp;
+    if (age > 10 * 60 * 1000) {
+      sessionStorage.removeItem('oauth_state');
+      return null;
     }
-  );
-  
-  const data = await handleResponse<LoginResponse>(response);
-  
-  // 保存 token 和 refresh_token 到 localStorage
-  saveAuthCredentials(data, data.user);
-  
-  return data;
+
+    return authState;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear OAuth state from sessionStorage
+ */
+export function clearOAuthState(): void {
+  sessionStorage.removeItem('oauth_state');
 }
 
 /**

@@ -10,96 +10,115 @@ import {
 	ChevronLeftIcon,
 } from 'lucide-react';
 import { Input } from './input';
-import { initiateSSOLogin, initiateGitHubLogin, checkEmailExists, sendEmailLogin, isAuthenticated } from '@/lib/api';
+import { getOIDCProviders, initiateOIDCLogin, checkEmailExists, sendEmailLogin, isAuthenticated, type OIDCProvider } from '@/lib/api';
 import { MorphingSquare } from './morphing-square';
+import { useI18n } from '@/lib/i18n/context';
 
-const ERROR_MESSAGES: Record<string, string> = {
-	'missing_oauth_params': 'OAuth 参数缺失',
-	'oauth_callback_failed': 'OAuth 回调处理失败',
-	'missing_token': '缺少访问令牌',
+const ERROR_KEYS: Record<string, string> = {
+	'missing_oauth_params': 'loginPage.errors.missingOauthParams',
+	'oauth_callback_failed': 'loginPage.errors.oauthCallbackFailed',
+	'missing_token': 'loginPage.errors.missingToken',
 };
 
 export function AuthPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { t } = useI18n();
 	const [email, setEmail] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
-	const [isSSOLoading, setIsSSOLoading] = useState(false);
-	const [isGitHubLoading, setIsGitHubLoading] = useState(false);
+	const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+	const [providers, setProviders] = useState<OIDCProvider[]>([]);
+	const [providersError, setProvidersError] = useState('');
 	const [error, setError] = useState('');
 
-	// 检查是否已登录，如果已登录则跳转到控制台
+	// Fetch available providers
+	useEffect(() => {
+		const fetchProviders = async () => {
+			try {
+				const availableProviders = await getOIDCProviders();
+				setProviders(availableProviders);
+			} catch (err) {
+				console.error('Failed to fetch OIDC providers:', err);
+				setProvidersError(err instanceof Error ? err.message : 'Failed to load authentication providers');
+			}
+		};
+		fetchProviders();
+	}, []);
+
+	// Check if already logged in
 	useEffect(() => {
 		if (isAuthenticated()) {
 			router.push('/dashboard');
 		}
 	}, [router]);
 
-	// 检查 URL 中是否有错误参数
+	// Check URL for error parameters
 	useEffect(() => {
 		const errorParam = searchParams.get('error');
 		if (errorParam) {
-			setError(ERROR_MESSAGES[errorParam] || errorParam);
+			const errorKey = ERROR_KEYS[errorParam];
+			setError(errorKey ? t(errorKey) : errorParam);
 		}
-	}, [searchParams]);
+	}, [searchParams, t]);
 
-	// 处理邮箱登录
+	// Handle email login
 	const handleEmailLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError('');
 		setIsLoading(true);
 
 		try {
-			// 检查邮箱是否存在
+			// Check if email exists
 			const exists = await checkEmailExists(email);
 			if (!exists) {
-				setError('我们在系统中无法找到你');
+				setError(t('loginPage.errors.userNotFound'));
 				return;
 			}
-			
-			// 发送登录邮件
+
+			// Send login email
 			const result = await sendEmailLogin(email);
 			if (result.success) {
-				// 显示成功消息
-				setError(''); // 清除错误
-				alert('登录链接已发送到您的邮箱,请查收!');
+				// Show success message
+				setError(''); // Clear error
+				alert(t('loginPage.errors.loginLinkSent'));
 			} else {
-				setError(result.message || '发送登录邮件失败,请稍后重试');
+				setError(result.message || t('loginPage.errors.sendEmailFailed'));
 			}
 		} catch (err) {
-			setError(err instanceof Error ? err.message : '登录失败,请稍后重试');
+			setError(err instanceof Error ? err.message : t('loginPage.errors.loginFailed'));
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
-	// 处理 SSO 登录
-	const handleSSOLogin = async () => {
+	// Handle OAuth login for any provider
+	const handleOAuthLogin = async (providerId: string) => {
 		setError('');
-		setIsSSOLoading(true);
+		setLoadingProvider(providerId);
 
 		try {
-			const { authorization_url } = await initiateSSOLogin();
-			// 重定向到 OAuth 授权页面
-			window.location.href = authorization_url;
+			await initiateOIDCLogin(providerId);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'SSO 登录失败');
-			setIsSSOLoading(false);
+			setError(err instanceof Error ? err.message : t('loginPage.errors.providerLoginFailed', { provider: providerId }));
+			setLoadingProvider(null);
 		}
 	};
 
-	// 处理 GitHub 登录
-	const handleGitHubLogin = async () => {
-		setError('');
-		setIsGitHubLoading(true);
-
-		try {
-			const { authorization_url } = await initiateGitHubLogin();
-			// 重定向到 GitHub 授权页面
-			window.location.href = authorization_url;
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'GitHub 登录失败');
-			setIsGitHubLoading(false);
+	// Get provider-specific icon
+	const getProviderIcon = (providerId: string) => {
+		switch (providerId) {
+			case 'linux_do':
+				return <img src="/linuxdoconnect.png" alt="Linux.do" className="size-4 me-2" />;
+			case 'github':
+				return (
+					<svg className="size-4 me-2" viewBox="0 0 24 24" fill="currentColor">
+						<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+					</svg>
+				);
+			case 'pocketid':
+				return <AtSignIcon className="size-4 me-2" />;
+			default:
+				return <AtSignIcon className="size-4 me-2" />;
 		}
 	};
 
@@ -114,8 +133,7 @@ export function AuthPage() {
 				<div className="z-10 mt-auto">
 					<blockquote className="space-y-2">
 						<p className="text-xl text-white">
-							&ldquo;This Platform has helped me to save time and serve my
-							clients faster than ever before.&rdquo;
+							&ldquo;{t('loginPage.testimonial')}&rdquo;
 						</p>
 						<footer className="font-mono text-sm font-semibold text-white/70">
 							~ Ali Hassan
@@ -139,7 +157,7 @@ export function AuthPage() {
 				<Button variant="ghost" className="absolute top-7 left-5 text-white hover:bg-white/30 hover:text-white" asChild>
 					<a href="/">
 						<ChevronLeftIcon className='size-4 me-2' />
-						首页
+						{t('loginPage.home')}
 					</a>
 				</Button>
 				<div className="mx-auto space-y-4 sm:w-sm">
@@ -149,52 +167,52 @@ export function AuthPage() {
 					</div>
 					<div className="flex flex-col space-y-2">
 						<h1 className="font-heading text-2xl font-bold tracking-wide text-white">
-							登录 AntiHub
+							{t('loginPage.title')}
 						</h1>
 						<p className="text-white/60 text-start text-xs">
-							推荐使用 SSO 登录
+							{t('loginPage.subtitle')}
 						</p>
 					</div>
 					<div className="space-y-2">
-						<Button
-							type="button"
-							size="lg"
-							className="w-full bg-white text-black hover:bg-white/90 cursor-pointer"
-							onClick={handleSSOLogin}
-							disabled={isSSOLoading || isLoading || isGitHubLoading}
-						>
-							{isSSOLoading ? (
-								<MorphingSquare className="size-4 me-2" />
-							) : (
-								<img src="/linuxdoconnect.png" alt="Linux.do" className="size-4 me-2" />
-							)}
-							使用 Linux.do 继续
-						</Button>
-						
-						<Button
-							type="button"
-							size="lg"
-							variant="outline"
-							className="w-full bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white cursor-pointer"
-							onClick={handleGitHubLogin}
-							disabled={isGitHubLoading || isLoading || isSSOLoading}
-						>
-							{isGitHubLoading ? (
-								<MorphingSquare className="size-4 me-2" />
-							) : (
-								<svg className="size-4 me-2" viewBox="0 0 24 24" fill="currentColor">
-									<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-								</svg>
-							)}
-							使用 GitHub 继续
-						</Button>
+						{providersError && (
+							<div className="text-red-400 text-sm p-2 bg-red-500/10 border border-red-500/20 rounded">
+								{providersError}
+							</div>
+						)}
+
+						{providers.length === 0 && !providersError && (
+							<div className="text-white/60 text-sm p-2 text-center">
+								{t('loginPage.loadingProviders')}
+							</div>
+						)}
+
+						{providers.map(provider => (
+							<Button
+								key={provider.id}
+								type="button"
+								size="lg"
+								variant={provider.id === 'linux_do' ? 'default' : 'outline'}
+								className={provider.id === 'linux_do'
+									? "w-full bg-white text-black hover:bg-white/90 cursor-pointer"
+									: "w-full bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white cursor-pointer"}
+								onClick={() => handleOAuthLogin(provider.id)}
+								disabled={loadingProvider !== null || isLoading}
+							>
+								{loadingProvider === provider.id ? (
+									<MorphingSquare className="size-4 me-2" />
+								) : (
+									getProviderIcon(provider.id)
+								)}
+								{t('loginPage.continueWith', { provider: provider.name })}
+							</Button>
+						))}
 					</div>
 
-					<AuthSeparator />
+					<AuthSeparator orText={t('loginPage.or')} />
 
 					<form className="space-y-2" onSubmit={handleEmailLogin}>
 						<p className="text-white/60 text-start text-xs">
-							透过邮箱登录
+							{t('loginPage.emailLogin')}
 						</p>
 						
 						{error && (
@@ -211,7 +229,7 @@ export function AuthPage() {
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								required
-								disabled={isLoading || isSSOLoading || isGitHubLoading}
+								disabled={isLoading || loadingProvider !== null}
 							/>
 							<div className="text-white/60 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
 								<AtSignIcon className="size-4" aria-hidden="true" />
@@ -221,32 +239,32 @@ export function AuthPage() {
 						<Button
 							type="submit"
 							className="w-full bg-white text-black hover:bg-white/90 cursor-pointer"
-							disabled={isLoading || isSSOLoading || isGitHubLoading}
+							disabled={isLoading || loadingProvider !== null}
 						>
 							{isLoading ? (
 								<>
 									<MorphingSquare className="size-4 me-2" />
-									登录中...
+									{t('loginPage.loggingIn')}
 								</>
 							) : (
-								<span>继续</span>
+								<span>{t('loginPage.continue')}</span>
 							)}
 						</Button>
 					</form>
 					<p className="text-white/50 mt-8 text-sm">
-						点击继续，即代表您同意我们的{' '}
+						{t('loginPage.termsNotice')}{' '}
 						<a
 							href="#"
 							className="hover:text-white underline underline-offset-4 text-white/70"
 						>
-							服务条款
+							{t('loginPage.termsOfService')}
 						</a>{' '}
-						和{' '}
+						{t('loginPage.and')}{' '}
 						<a
 							href="#"
 							className="hover:text-white underline underline-offset-4 text-white/70"
 						>
-							隐私政策
+							{t('loginPage.privacyPolicy')}
 						</a>
 						.
 					</p>
@@ -303,11 +321,11 @@ function FloatingPaths({ position }: { position: number }) {
 	);
 }
 
-const AuthSeparator = () => {
+const AuthSeparator = ({ orText }: { orText: string }) => {
 	return (
 		<div className="flex w-full items-center justify-center">
 			<div className="bg-white/10 h-px w-full" />
-			<span className="text-white/60 px-2 text-xs">或</span>
+			<span className="text-white/60 px-2 text-xs">{orText}</span>
 			<div className="bg-white/10 h-px w-full" />
 		</div>
 	);

@@ -453,5 +453,32 @@
     "past24Hours": "过去24小时",
     "past48Hours": "过去48小时",
     "past7Days": "过去7天"
+  },
+  "loginPage": {
+    "title": "登录 AntiHub",
+    "subtitle": "推荐使用 SSO 登录",
+    "home": "首页",
+    "loadingProviders": "正在加载登录方式...",
+    "continueWith": "使用 {{provider}} 继续",
+    "or": "或",
+    "emailLogin": "透过邮箱登录",
+    "emailPlaceholder": "your.email@example.com",
+    "continue": "继续",
+    "loggingIn": "登录中...",
+    "termsNotice": "点击继续，即代表您同意我们的",
+    "termsOfService": "服务条款",
+    "and": "和",
+    "privacyPolicy": "隐私政策",
+    "testimonial": "这个平台帮助我节省了时间，让我能更快地服务客户。",
+    "errors": {
+      "missingOauthParams": "OAuth 参数缺失",
+      "oauthCallbackFailed": "OAuth 回调处理失败",
+      "missingToken": "缺少访问令牌",
+      "userNotFound": "我们在系统中无法找到你",
+      "loginLinkSent": "登录链接已发送到您的邮箱,请查收!",
+      "sendEmailFailed": "发送登录邮件失败,请稍后重试",
+      "loginFailed": "登录失败,请稍后重试",
+      "providerLoginFailed": "{{provider}} 登录失败"
+    }
   }
 }

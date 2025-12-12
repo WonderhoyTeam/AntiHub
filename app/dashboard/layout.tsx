@@ -9,7 +9,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { MorphingSquare } from '@/components/ui/morphing-square';
-import { setupTokenRefresh } from '@/lib/api';
+import { setupTokenRefresh, clearOAuthState } from '@/lib/api';
 
 export default function DashboardLayout({
   children,
@@ -48,6 +48,13 @@ export default function DashboardLayout({
           localStorage.setItem('token_expires_at', String(expiresAt));
           console.log('Token expires at:', new Date(expiresAt).toISOString());
         }
+
+        // Clear OAuth state from sessionStorage (CSRF protection cleanup)
+        clearOAuthState();
+        console.log('OAuth state cleared from sessionStorage');
+
+        // Clean up URL parameters (remove tokens from URL)
+        window.history.replaceState({}, '', '/dashboard');
       } catch (error) {
         console.error('Failed to sync login data:', error);
       }

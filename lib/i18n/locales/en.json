@@ -453,5 +453,32 @@
     "past24Hours": "Past 24 hours",
     "past48Hours": "Past 48 hours",
     "past7Days": "Past 7 days"
+  },
+  "loginPage": {
+    "title": "Login to AntiHub",
+    "subtitle": "SSO login is recommended",
+    "home": "Home",
+    "loadingProviders": "Loading providers...",
+    "continueWith": "Continue with {{provider}}",
+    "or": "or",
+    "emailLogin": "Login via email",
+    "emailPlaceholder": "your.email@example.com",
+    "continue": "Continue",
+    "loggingIn": "Logging in...",
+    "termsNotice": "By clicking continue, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "testimonial": "This Platform has helped me to save time and serve my clients faster than ever before.",
+    "errors": {
+      "missingOauthParams": "OAuth parameters missing",
+      "oauthCallbackFailed": "OAuth callback processing failed",
+      "missingToken": "Access token missing",
+      "userNotFound": "We could not find you in the system",
+      "loginLinkSent": "Login link sent to your email, please check!",
+      "sendEmailFailed": "Failed to send login email, please try again later",
+      "loginFailed": "Login failed, please try again later",
+      "providerLoginFailed": "{{provider}} login failed"
+    }
   }
 }
