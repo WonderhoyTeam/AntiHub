@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getSharedPoolStats, getQuotaConsumption, getSharedPoolQuotas, type SharedPoolStats, type UserConsumption } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 interface ComputedStats {
   totalAccounts: number;
@@ -26,6 +27,7 @@ interface ComputedStats {
 }
 
 export function SectionCards() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState<ComputedStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,27 +35,23 @@ export function SectionCards() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        // 使用新的统计端点
         const [poolStats, consumptionData, sharedPoolData] = await Promise.all([
           getSharedPoolStats(),
           getQuotaConsumption({ limit: 1000 }),
           getSharedPoolQuotas()
         ]);
 
-        // 计算模型统计
         const models = Object.entries(poolStats.quotas_by_model);
         const totalModels = models.length;
         const availableModels = models.filter(([_, m]) => m.total_quota > 0 && m.status === 1).length;
 
-        // 计算24小时内的消耗
         const now = new Date();
         const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         const recentConsumption = consumptionData.filter(c => new Date(c.consumed_at) >= last24h);
-        
+
         const consumedLast24h = recentConsumption.reduce((sum, c) => sum + parseFloat(c.quota_consumed), 0);
         const callsLast24h = recentConsumption.length;
 
-        // 获取用户总消费统计
         const userConsumption = sharedPoolData.user_consumption;
 
         setStats({
@@ -67,14 +65,14 @@ export function SectionCards() {
           totalQuotaConsumed: userConsumption?.total_quota_consumed || 0
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载数据失败');
+        setError(err instanceof Error ? err.message : t('dashboard.loadingError'));
       } finally {
         setIsLoading(false);
       }
     };
 
     loadStats();
-  }, []);
+  }, [t]);
 
   if (isLoading) {
     return (
@@ -116,7 +114,7 @@ export function SectionCards() {
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>共享账号总数</CardDescription>
+          <CardDescription>{t('dashboard.stats.totalAccounts')}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats?.totalAccounts || 0}
           </CardTitle>
@@ -128,16 +126,16 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            共享池账号总数
+            {t('dashboard.stats.totalAccounts')}
           </div>
           <div className="text-muted-foreground">
-            所有共享账号
+            {t('dashboard.stats.allSharedAccounts')}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>活跃账号数</CardDescription>
+          <CardDescription>{t('dashboard.stats.activeAccounts')}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats?.activeAccounts || 0}
           </CardTitle>
@@ -149,16 +147,16 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            活跃率 {accountAvailabilityRate}%
+            {t('dashboard.stats.activeRate')} {accountAvailabilityRate}%
           </div>
           <div className="text-muted-foreground">
-            当前活跃的账号
+            {t('dashboard.stats.activeAccountsDesc')}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>24小时配额消耗</CardDescription>
+          <CardDescription>{t('dashboard.stats.consumed24h')}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats?.consumedLast24h.toFixed(2) || '0.00'}
           </CardTitle>
@@ -170,14 +168,14 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            总消耗: {stats?.totalQuotaConsumed?.toFixed(2) || '0.00'}
+            {t('dashboard.stats.totalConsumed')}: {stats?.totalQuotaConsumed?.toFixed(2) || '0.00'}
           </div>
-          <div className="text-muted-foreground">Antigravity 配额消耗</div>
+          <div className="text-muted-foreground">{t('dashboard.stats.quotaConsumption')}</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>24小时调用量</CardDescription>
+          <CardDescription>{t('dashboard.stats.calls24h')}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats?.callsLast24h?.toLocaleString() || '0'}
           </CardTitle>
@@ -189,9 +187,9 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            总调用: {stats?.totalRequests?.toLocaleString() || '0'} 次
+            {t('dashboard.stats.totalCalls')}: {stats?.totalRequests?.toLocaleString() || '0'} {t('dashboard.stats.times')}
           </div>
-          <div className="text-muted-foreground">Antigravity API 调用</div>
+          <div className="text-muted-foreground">{t('dashboard.stats.apiCalls')}</div>
         </CardFooter>
       </Card>
     </div>

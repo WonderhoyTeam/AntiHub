@@ -20,8 +20,10 @@ import { MorphingSquare } from '@/components/ui/morphing-square';
 import { cn } from '@/lib/utils';
 import Toaster, { ToasterRef } from '@/components/ui/toast';
 import { Badge as Badge1 } from '@/components/ui/badge-1';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const toasterRef = useRef<ToasterRef>(null);
   const [apiKeys, setApiKeys] = useState<PluginAPIKey[]>([]);
   const [newApiKey, setNewApiKey] = useState<string>('');
@@ -83,15 +85,15 @@ export default function SettingsPage() {
       await updateCookiePreference(newPreference);
       setPreferShared(newPreference);
       toasterRef.current?.show({
-        title: '更新成功',
-        message: '已保存账户首选项配置',
+        title: t('settings.updateSuccess'),
+        message: t('settings.preferenceUpdated'),
         variant: 'success',
         position: 'top-right',
       });
     } catch (err) {
       toasterRef.current?.show({
-        title: '更新失败',
-        message: err instanceof Error ? err.message : '更新账户首选项失败',
+        title: t('settings.updateFailed'),
+        message: err instanceof Error ? err.message : t('settings.updateFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -109,8 +111,8 @@ export default function SettingsPage() {
   const handleGenerateKey = async () => {
     if (!keyName.trim()) {
       toasterRef.current?.show({
-        title: '输入错误',
-        message: '请输入API密钥名称',
+        title: t('settings.inputError'),
+        message: t('settings.enterKeyName'),
         variant: 'warning',
         position: 'top-right',
       });
@@ -129,8 +131,8 @@ export default function SettingsPage() {
       await loadAPIKeys();
     } catch (err) {
       toasterRef.current?.show({
-        title: '生成失败',
-        message: err instanceof Error ? err.message : '生成API密钥失败',
+        title: t('settings.generateFailed'),
+        message: err instanceof Error ? err.message : t('settings.generateFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -146,7 +148,7 @@ export default function SettingsPage() {
   };
 
   const handleDeleteKey = async (keyId: number) => {
-    if (!confirm('确定要删除此API密钥吗？删除后将无法恢复，所有使用此密钥的应用将无法访问 AI 资源。')) {
+    if (!confirm(t('settings.deleteKeyConfirm'))) {
       return;
     }
 
@@ -155,8 +157,8 @@ export default function SettingsPage() {
     try {
       await deleteAPIKey(keyId);
       toasterRef.current?.show({
-        title: '删除成功',
-        message: 'API密钥已删除',
+        title: t('settings.deleteSuccess'),
+        message: t('settings.apiKeyCopied'),
         variant: 'success',
         position: 'top-right',
       });
@@ -164,8 +166,8 @@ export default function SettingsPage() {
       await loadAPIKeys();
     } catch (err) {
       toasterRef.current?.show({
-        title: '删除失败',
-        message: err instanceof Error ? err.message : '删除API密钥失败',
+        title: t('settings.deleteFailed'),
+        message: err instanceof Error ? err.message : t('settings.deleteFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -177,8 +179,8 @@ export default function SettingsPage() {
   const handleCopyKey = (key: string) => {
     navigator.clipboard.writeText(key);
     toasterRef.current?.show({
-      title: '复制成功',
-      message: 'API密钥已复制到剪贴板',
+      title: t('settings.copySuccess'),
+      message: t('settings.apiKeyCopied'),
       variant: 'success',
       position: 'top-right',
     });
@@ -214,7 +216,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-1.5">
                 <CardTitle className="flex items-center gap-2">
-                  API密钥管理
+                  {t('settings.apiKeys')}
                 </CardTitle>
               </div>
               <Button
@@ -223,7 +225,7 @@ export default function SettingsPage() {
                 className="gap-1"
               >
                 <IconPlus className="size-4" />
-                创建
+                {t('common.create')}
               </Button>
             </div>
           </CardHeader>
@@ -231,17 +233,17 @@ export default function SettingsPage() {
             {/* API Keys 列表 */}
             {apiKeys.length > 0 ? (
               <div className="space-y-3">
-                <Label className="text-sm font-medium">当前已创建{apiKeys.length}个密钥</Label>
+                <Label className="text-sm font-medium">{t('settings.currentKeys', { count: apiKeys.length })}</Label>
                 <div className="border rounded-lg overflow-x-auto -mx-2 md:mx-0 border-x md:border-x">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="text-left p-3 text-sm font-medium min-w-[120px]">名称</th>
-                        <th className="text-left p-3 text-sm font-medium min-w-[100px]">类型</th>
-                        <th className="text-left p-3 text-sm font-medium min-w-[180px]">密钥</th>
-                        <th className="text-left p-3 text-sm font-medium min-w-[130px]">创建时间</th>
-                        <th className="text-left p-3 text-sm font-medium min-w-[130px]">最后使用</th>
-                        <th className="text-right p-3 text-sm font-medium min-w-[80px]">操作</th>
+                        <th className="text-left p-3 text-sm font-medium min-w-[120px]">{t('settings.name')}</th>
+                        <th className="text-left p-3 text-sm font-medium min-w-[100px]">{t('settings.type')}</th>
+                        <th className="text-left p-3 text-sm font-medium min-w-[180px]">{t('settings.key')}</th>
+                        <th className="text-left p-3 text-sm font-medium min-w-[130px]">{t('settings.createdAt')}</th>
+                        <th className="text-left p-3 text-sm font-medium min-w-[130px]">{t('settings.lastUsed')}</th>
+                        <th className="text-right p-3 text-sm font-medium min-w-[80px]">{t('common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -272,7 +274,7 @@ export default function SettingsPage() {
                           <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                             {key.last_used_at
                               ? new Date(key.last_used_at).toLocaleString('zh-CN')
-                              : '从未使用'
+                              : t('accounts.neverUsed')
                             }
                           </td>
                           <td className="p-3 text-right">
@@ -298,7 +300,7 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm">暂无API密钥</p>
+                <p className="text-sm">{t('settings.apiKeys')}</p>
               </div>
             )}
           </CardContent>
@@ -308,7 +310,7 @@ export default function SettingsPage() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              首选项
+              {t('settings.accountPreference')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -331,7 +333,7 @@ export default function SettingsPage() {
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">优先使用专属账号</h3>
+                    <h3 className="font-semibold">{t('settings.preferDedicated')}</h3>
                   </div>
                 </div>
               </label>
@@ -354,7 +356,7 @@ export default function SettingsPage() {
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">优先使用共享账号</h3>
+                    <h3 className="font-semibold">{t('settings.preferShared')}</h3>
                   </div>
                 </div>
               </label>
@@ -362,7 +364,7 @@ export default function SettingsPage() {
 
             {isUpdatingPreference && (
               <div className="flex items-center justify-center py-4">
-                <MorphingSquare message="更新中..." />
+                <MorphingSquare message={t('common.loading')} />
               </div>
             )}
           </CardContent>
@@ -372,12 +374,12 @@ export default function SettingsPage() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              终结点
+              {t('settings.endpoint')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label className="text-sm font-medium">默认终结点</Label>
+              <Label className="text-sm font-medium">{t('settings.defaultEndpoint')}</Label>
               <div className="flex gap-2">
                 <Input
                   value={apiEndpoint}
@@ -398,8 +400,8 @@ export default function SettingsPage() {
               <div className="flex gap-3">
                 <IconAlertTriangle className="size-5 text-yellow-500 shrink-0 mt-0.5" />
                 <div className="space-y-2 text-sm">
-                  <p className="font-medium text-yellow-500">温馨提示</p>
-                  <p className="font-sm text-muted-foreground">你必须提供有效的API密钥才能访问此终结点。要获取模型列表，你的账户内必须具有有效的专属账号或共享账号配额。我们支持OpenAI格式或Anthropic格式的消息。</p>
+                  <p className="font-medium text-yellow-500">{t('settings.notice')}</p>
+                  <p className="font-sm text-muted-foreground">{t('settings.endpointNotice')}</p>
                 </div>
               </div>
             </div>
@@ -411,15 +413,15 @@ export default function SettingsPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>创建API密钥</DialogTitle>
+            <DialogTitle>{t('settings.createKey')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="key-name">名称</Label>
+              <Label htmlFor="key-name">{t('settings.name')}</Label>
               <Input
                 id="key-name"
-                placeholder="输入API密钥名称"
+                placeholder={t('settings.enterKeyName')}
                 value={keyName}
                 onChange={(e) => setKeyName(e.target.value)}
                 maxLength={50}
@@ -427,7 +429,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-3">
-              <Label>类型</Label>
+              <Label>{t('settings.type')}</Label>
 
               {/* Antigravity */}
               <label
@@ -447,10 +449,10 @@ export default function SettingsPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">Antigravity</h3>
-                    <Badge variant="secondary">默认</Badge>
+                    <Badge variant="secondary">{t('settings.default')}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    使用Antigravity账号配额
+                    {t('settings.useAntigravityQuota')}
                   </p>
                 </div>
               </label>
@@ -483,7 +485,7 @@ export default function SettingsPage() {
                     </Badge1>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {hasBeta ? '使用Kiro账号配额' : '需要加入Beta计划'}
+                    {hasBeta ? t('settings.useKiroQuota') : t('settings.needBeta')}
                   </p>
                 </div>
               </label>
@@ -496,7 +498,7 @@ export default function SettingsPage() {
               onClick={() => setIsCreateDialogOpen(false)}
               disabled={isGenerating}
             >
-              取消
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleGenerateKey}
@@ -505,10 +507,10 @@ export default function SettingsPage() {
               {isGenerating ? (
                 <>
                   <MorphingSquare className="size-4 mr-2" />
-                  创建中...
+                  {t('common.loading')}
                 </>
               ) : (
-                '创建'
+                t('common.create')
               )}
             </Button>
           </DialogFooter>
@@ -519,15 +521,15 @@ export default function SettingsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>生成成功</DialogTitle>
+            <DialogTitle>{t('settings.generateSuccess')}</DialogTitle>
             <DialogDescription>
-              请妥善保存此密钥，关闭后将无法再次查看完整内容
+              {t('settings.saveKeyNotice')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>API密钥</Label>
+              <Label>{t('settings.key')}</Label>
               <div className="flex gap-2">
                 <Input
                   value={showApiKey ? (newApiKey || '') : maskApiKey(newApiKey || '')}
@@ -558,7 +560,7 @@ export default function SettingsPage() {
 
           <DialogFooter>
             <Button onClick={handleCloseDialog}>
-              我已保存
+              {t('settings.saved')}
             </Button>
           </DialogFooter>
         </DialogContent>

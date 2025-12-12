@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass -File .scripts/migrate-accounts-i18n.ps1)",
+      "Bash(npm run lint)",
+      "Bash(powershell -Command \"Get-Content ''C:\\Users\\user\\Documents\\Projects\\forks\\antihub\\AntiHub\\lib\\i18n\\locales\\en.json'' | Select-Object -Last 20\")",
+      "Bash(powershell -Command \"$lines = Get-Content ''C:\\Users\\user\\Documents\\Projects\\forks\\antihub\\AntiHub\\lib\\i18n\\locales\\en.json''; $lines.Count\")",
+      "Bash(powershell -Command \"(Get-Content ''C:\\Users\\user\\Documents\\Projects\\forks\\antihub\\AntiHub\\lib\\i18n\\locales\\en.json'').Count\")",
+      "Bash(Select-String -Pattern \"problem\" -Context 0,2)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

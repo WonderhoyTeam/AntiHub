@@ -22,63 +22,59 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { getStoredUser } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n/hooks"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
-const data = {
-  user: {
-    name: "antihub",
-    email: "antihub@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { t } = useTranslation()
+  const [user, setUser] = React.useState({
+    name: t('user.guest'),
+    email: t('user.notLoggedIn'),
+    avatar: "/logo_light.png",
+  })
+
+  const navMain = [
     {
-      title: "我的仪表板",
+      title: t('nav.dashboard'),
       url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "账号管理",
+      title: t('nav.accounts'),
       url: "/dashboard/accounts",
       icon: IconListDetails,
     },
     {
-      title: "用量统计",
+      title: t('nav.analytics'),
       url: "/dashboard/analytics",
       icon: IconChartBar,
     },
     {
-      title: "演练场",
+      title: t('nav.playground'),
       url: "/dashboard/playground",
       icon: IconDeviceImacCode,
     }
-  ],
-  navSecondary: [
+  ]
+
+  const navSecondary = [
     {
-      title: "设置",
+      title: t('nav.settings'),
       url: "/dashboard/settings",
       icon: IconSettings,
     },
     {
-      title: "帮助",
+      title: t('nav.help'),
       url: "/dashboard/help",
       icon: IconHelp,
     },
   ]
-}
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [user, setUser] = React.useState({
-    name: "访客",
-    email: "未登录",
-    avatar: "/logo_light.png",
-  })
 
   React.useEffect(() => {
-    // 从 localStorage 读取用户信息
     const storedUser = getStoredUser()
     if (storedUser) {
       setUser({
         name: storedUser.username,
-        email: storedUser.username, // 如果后端没有 email,使用 username
+        email: storedUser.username,
         avatar: storedUser.avatar_url || "/logo_light.png",
       })
     }
@@ -106,10 +102,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
+        <div className="p-2">
+          <LanguageSwitcher />
+        </div>
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>

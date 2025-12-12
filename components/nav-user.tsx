@@ -28,6 +28,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { logout } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export function NavUser({
   user,
@@ -40,6 +41,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
+  const { t } = useTranslation()
 
   const handleLogout = async () => {
     try {
@@ -47,14 +49,12 @@ export function NavUser({
       router.push('/auth')
     } catch (error) {
       console.error('Logout failed:', error)
-      // 即使后端登出失败,也清除本地数据并跳转
       localStorage.removeItem('access_token')
       localStorage.removeItem('user')
       router.push('/auth')
     }
   }
 
-  // 获取用户名首字母作为头像 fallback
   const initials = user.name
     .split(' ')
     .map(n => n[0])
@@ -108,13 +108,13 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
                 <IconUserCircle />
-                用户信息
+                {t('user.profile')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
-              退出登录
+              {t('user.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

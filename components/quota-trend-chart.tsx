@@ -25,25 +25,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const chartConfig = {
-  quota_consumed: {
-    label: "配额消耗",
-    color: "hsl(var(--chart-1))",
-  },
-  count: {
-    label: "调用次数",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
-
-interface TrendDataPoint {
-  time: string;
-  quota_consumed: number;
-  count: number;
-}
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export function QuotaTrendChart() {
+  const { t, locale } = useTranslation()
+
+  const chartConfig = {
+    quota_consumed: {
+      label: t('dashboard.stats.quotaConsumption'),
+      color: "hsl(var(--chart-1))",
+    },
+    count: {
+      label: t('dashboard.stats.apiCalls'),
+      color: "hsl(var(--chart-2))",
+    },
+  } satisfies ChartConfig
   const [timeRange, setTimeRange] = React.useState("24")
   const [data, setData] = React.useState<TrendDataPoint[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -94,7 +90,7 @@ export function QuotaTrendChart() {
 
         setData(chartData)
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载趋势数据失败')
+        setError(err instanceof Error ? err.message : t('dashboard.loadingError'))
       } finally {
         setIsLoading(false)
       }
@@ -121,8 +117,8 @@ export function QuotaTrendChart() {
     return (
       <Card className="@container/card">
         <CardHeader>
-          <CardTitle>配额消耗趋势</CardTitle>
-          <CardDescription>共享池配额使用情况</CardDescription>
+          <CardTitle>{t('dashboard.quotaTrend')}</CardTitle>
+          <CardDescription>{t('dashboard.sharedQuotaPool')}</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[250px]">
           <div className="text-red-500 text-sm">{error}</div>
@@ -134,25 +130,25 @@ export function QuotaTrendChart() {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>配额消耗趋势</CardTitle>
+        <CardTitle>{t('dashboard.quotaTrend')}</CardTitle>
         <CardAction>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
               className="w-40"
               size="sm"
-              aria-label="选择时间范围"
+              aria-label={t('quotaTrend.selectTimeRange')}
             >
-              <SelectValue placeholder="过去24小时" />
+              <SelectValue placeholder={t('quotaTrend.past24Hours')} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="24" className="rounded-lg">
-                过去24小时
+                {t('quotaTrend.past24Hours')}
               </SelectItem>
               <SelectItem value="48" className="rounded-lg">
-                过去48小时
+                {t('quotaTrend.past48Hours')}
               </SelectItem>
               <SelectItem value="168" className="rounded-lg">
-                过去7天
+                {t('quotaTrend.past7Days')}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -199,7 +195,7 @@ export function QuotaTrendChart() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleString("zh-CN", {
+                return date.toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
                   month: "short",
                   day: "numeric",
                   hour: "2-digit",
@@ -217,7 +213,7 @@ export function QuotaTrendChart() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleString("zh-CN", {
+                    return new Date(value).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",

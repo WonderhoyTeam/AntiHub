@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   getUserQuotas,
   getQuotaConsumption,
@@ -44,14 +44,15 @@ import { MorphingSquare } from '@/components/ui/morphing-square';
 import { Gemini, Claude, OpenAI } from '@lobehub/icons';
 import Toaster, { ToasterRef } from '@/components/ui/toast';
 import { Badge as Badge1 } from '@/components/ui/badge-1';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const toasterRef = useRef<ToasterRef>(null);
   const [quotas, setQuotas] = useState<UserQuotaItem[]>([]);
   const [consumptions, setConsumptions] = useState<QuotaConsumption[]>([]);
   const [allConsumptions, setAllConsumptions] = useState<QuotaConsumption[]>([]); // 存储所有消费记录
   const [kiroStats, setKiroStats] = useState<KiroConsumptionStats | null>(null);
-  const [kiroAccounts, setKiroAccounts] = useState<KiroAccount[]>([]);
   const [kiroLogs, setKiroLogs] = useState<KiroConsumptionLog[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [antigravityCurrentPage, setAntigravityCurrentPage] = useState(1); // Antigravity 分页
@@ -62,11 +63,47 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const pageSize = 50;
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab, currentPage, antigravityCurrentPage]);
+  const loadKiroLogs = useCallback(async (accounts: KiroAccount[]) => {
+    if (accounts.length === 0) return;
 
-  const loadData = async () => {
+    try {
+      // 聚合所有账号的消费记录
+      const allLogs: KiroConsumptionLog[] = [];
+      let totalCount = 0;
+
+      await Promise.all(
+        accounts.map(async (account) => {
+          try {
+            const consumptionData = await getKiroAccountConsumption(account.account_id, {
+              limit: 1000  // 获取足够多的记录用于聚合
+            });
+            allLogs.push(...consumptionData.logs);
+            totalCount += consumptionData.pagination.total;
+          } catch (err) {
+            console.error(`Failed to load consumption records for account ${account.account_id}:`, err);
+          }
+        })
+      );
+
+      // 按时间降序排序
+      allLogs.sort((a, b) => new Date(b.consumed_at).getTime() - new Date(a.consumed_at).getTime());
+
+      // 分页
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      setKiroLogs(allLogs.slice(startIndex, endIndex));
+      setTotalRecords(allLogs.length);
+    } catch (err) {
+      toasterRef.current?.show({
+        title: t('common.loadingFailed'),
+        message: err instanceof Error ? err.message : t('analytics.loadConsumptionFailed'),
+        variant: 'error',
+        position: 'top-right',
+      });
+    }
+  }, [currentPage, pageSize, t]);
+
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       const user = await getCurrentUser();
@@ -91,62 +128,25 @@ export default function AnalyticsPage() {
           getKiroAccounts()
         ]);
         setKiroStats(statsData);
-        setKiroAccounts(accountsData);
 
         // 加载所有账号的消费记录并聚合
         await loadKiroLogs(accountsData);
       }
     } catch (err) {
       toasterRef.current?.show({
-        title: '加载失败',
-        message: err instanceof Error ? err.message : '加载数据失败',
+        title: t('common.loadingFailed'),
+        message: err instanceof Error ? err.message : t('analytics.loadDataFailed'),
         variant: 'error',
         position: 'top-right',
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab, antigravityCurrentPage, pageSize, loadKiroLogs, t]);
 
-  const loadKiroLogs = async (accounts: KiroAccount[]) => {
-    if (accounts.length === 0) return;
-
-    try {
-      // 聚合所有账号的消费记录
-      const allLogs: KiroConsumptionLog[] = [];
-      let totalCount = 0;
-
-      await Promise.all(
-        accounts.map(async (account) => {
-          try {
-            const consumptionData = await getKiroAccountConsumption(account.account_id, {
-              limit: 1000  // 获取足够多的记录用于聚合
-            });
-            allLogs.push(...consumptionData.logs);
-            totalCount += consumptionData.pagination.total;
-          } catch (err) {
-            console.error(`加载账号${account.account_id}消费记录失败:`, err);
-          }
-        })
-      );
-
-      // 按时间降序排序
-      allLogs.sort((a, b) => new Date(b.consumed_at).getTime() - new Date(a.consumed_at).getTime());
-
-      // 分页
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      setKiroLogs(allLogs.slice(startIndex, endIndex));
-      setTotalRecords(allLogs.length);
-    } catch (err) {
-      toasterRef.current?.show({
-        title: '加载失败',
-        message: err instanceof Error ? err.message : '加载消费记录失败',
-        variant: 'error',
-        position: 'top-right',
-      });
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         <div className="px-4 lg:px-6">
           <div className="flex items-center justify-center min-h-screen">
-            <MorphingSquare message="加载中..." />
+            <MorphingSquare message={t('common.loading')} />
           </div>
         </div>
       </div>
@@ -296,26 +296,26 @@ export default function AnalyticsPage() {
         {activeTab === 'antigravity' && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>模型配额</CardTitle>
+              <CardTitle>{t('analytics.modelQuotas')}</CardTitle>
               <CardDescription>
-                您可以使用 {quotas.length} 个模型。
+                {t('analytics.availableModels', { count: quotas.length })}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {quotas.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg mb-2">暂无配额信息</p>
+                  <p className="text-lg mb-2">{t('analytics.noQuotaInfo')}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="min-w-[180px]">模型名称</TableHead>
-                        <TableHead className="min-w-[100px]">当前配额</TableHead>
-                        <TableHead className="min-w-[100px]">最大配额</TableHead>
-                        <TableHead className="min-w-[80px]">使用率</TableHead>
-                        <TableHead className="min-w-[150px]">最后更新</TableHead>
+                        <TableHead className="min-w-[180px]">{t('analytics.modelName')}</TableHead>
+                        <TableHead className="min-w-[100px]">{t('analytics.currentQuota')}</TableHead>
+                        <TableHead className="min-w-[100px]">{t('analytics.maxQuota')}</TableHead>
+                        <TableHead className="min-w-[80px]">{t('analytics.usage Rate')}</TableHead>
+                        <TableHead className="min-w-[150px]">{t('analytics.lastUpdated')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -369,8 +369,8 @@ export default function AnalyticsPage() {
             <CardContent>
               {consumptions.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg mb-2">暂无使用记录</p>
-                  <p className="text-sm">立即创建您的 API Key 开始对话吧！</p>
+                  <p className="text-lg mb-2">{t('analytics.noUsageRecords')}</p>
+                  <p className="text-sm">{t('analytics.createApiKeyToStart')}</p>
                 </div>
               ) : (
                 <>
@@ -378,11 +378,11 @@ export default function AnalyticsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[150px]">账号 ID</TableHead>
-                          <TableHead className="min-w-[150px]">模型</TableHead>
-                          <TableHead className="min-w-[80px]">类型</TableHead>
-                          <TableHead className="min-w-[100px]">消耗配额</TableHead>
-                          <TableHead className="min-w-[150px]">时间</TableHead>
+                          <TableHead className="min-w-[150px]">{t('analytics.accountId')}</TableHead>
+                          <TableHead className="min-w-[150px]">{t('analytics.model')}</TableHead>
+                          <TableHead className="min-w-[80px]">{t('analytics.type')}</TableHead>
+                          <TableHead className="min-w-[100px]">{t('analytics.consumedQuota')}</TableHead>
+                          <TableHead className="min-w-[150px]">{t('analytics.time')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -481,7 +481,7 @@ export default function AnalyticsPage() {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  消费统计
+                  {t('analytics.consumptionStats')}
                   <Badge1 variant="turbo">Beta</Badge1>
                 </CardTitle>
               </CardHeader>
@@ -489,25 +489,25 @@ export default function AnalyticsPage() {
                 {kiroStats && kiroStats.total_credit !== undefined ? (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">总请求数</p>
+                      <p className="text-sm text-muted-foreground">{t('analytics.totalRequests')}</p>
                       <p className="text-2xl font-bold">{kiroStats.total_requests || '0'}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">总消费额度</p>
+                      <p className="text-sm text-muted-foreground">{t('analytics.totalConsumption')}</p>
                       <p className="text-2xl font-bold">${parseFloat(kiroStats.total_credit || '0').toFixed(4)}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">共享账号消费</p>
+                      <p className="text-sm text-muted-foreground">{t('analytics.sharedAccountConsumption')}</p>
                       <p className="text-2xl font-bold">${parseFloat(kiroStats.shared_credit || '0').toFixed(4)}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">专属账号消费</p>
+                      <p className="text-sm text-muted-foreground">{t('analytics.dedicatedAccountConsumption')}</p>
                       <p className="text-2xl font-bold">${parseFloat(kiroStats.private_credit || '0').toFixed(4)}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-sm">暂无消费数据</p>
+                    <p className="text-sm">{t('analytics.noConsumptionData')}</p>
                   </div>
                 )}
               </CardContent>
@@ -524,8 +524,8 @@ export default function AnalyticsPage() {
               <CardContent>
                 {kiroLogs.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-lg mb-2">暂无使用记录</p>
-                    <p className="text-sm">开始使用Kiro账号进行对话吧！</p>
+                    <p className="text-lg mb-2">{t('analytics.noUsageRecords')}</p>
+                    <p className="text-sm">{t('analytics.startUsingKiro')}</p>
                   </div>
                 ) : (
                   <>
@@ -533,12 +533,12 @@ export default function AnalyticsPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="min-w-[120px]">账号ID</TableHead>
-                            <TableHead className="min-w-[150px]">账号名称</TableHead>
-                            <TableHead className="min-w-[150px]">模型</TableHead>
-                            <TableHead className="min-w-[80px]">类型</TableHead>
-                            <TableHead className="min-w-[100px]">消耗额度</TableHead>
-                            <TableHead className="min-w-[150px]">时间</TableHead>
+                            <TableHead className="min-w-[120px]">{t('analytics.accountId')}</TableHead>
+                            <TableHead className="min-w-[150px]">{t('analytics.accountName')}</TableHead>
+                            <TableHead className="min-w-[150px]">{t('analytics.model')}</TableHead>
+                            <TableHead className="min-w-[80px]">{t('analytics.type')}</TableHead>
+                            <TableHead className="min-w-[100px]">{t('analytics.consumedQuota')}</TableHead>
+                            <TableHead className="min-w-[150px]">{t('analytics.time')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -548,7 +548,7 @@ export default function AnalyticsPage() {
                                 {log.account_id}
                               </TableCell>
                               <TableCell className="text-sm">
-                                {log.account_name || '未命名'}
+                                {log.account_name || t('analytics.unnamed')}
                               </TableCell>
                               <TableCell>
                                 <Badge variant="outline" className="whitespace-nowrap">

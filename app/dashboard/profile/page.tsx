@@ -19,8 +19,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const toasterRef = useRef<ToasterRef>(null);
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,8 +39,8 @@ export default function ProfilePage() {
       setUser(userData);
     } catch (err) {
       toasterRef.current?.show({
-        title: '加载失败',
-        message: err instanceof Error ? err.message : '加载用户信息失败',
+        title: t('common.loadingFailed'),
+        message: err instanceof Error ? err.message : t('profile.loadUserInfoFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -57,7 +59,7 @@ export default function ProfilePage() {
     try {
       const result = await joinBeta();
       toasterRef.current?.show({
-        title: '加入成功',
+        title: t('profile.joinSuccess'),
         message: result.message,
         variant: 'success',
         position: 'top-right',
@@ -66,8 +68,8 @@ export default function ProfilePage() {
       await loadUserInfo();
     } catch (err) {
       toasterRef.current?.show({
-        title: '加入失败',
-        message: err instanceof Error ? err.message : '加入Beta计划失败',
+        title: t('profile.joinFailed'),
+        message: err instanceof Error ? err.message : t('profile.joinBetaFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -79,13 +81,13 @@ export default function ProfilePage() {
   // 获取信任等级显示文本
   const getTrustLevelText = (level: number) => {
     const levels: Record<number, string> = {
-      0: '新用户',
-      1: '基础用户',
-      2: '成员',
-      3: '正式成员',
-      4: '领导者',
+      0: t('profile.newUser'),
+      1: t('profile.basicUser'),
+      2: t('profile.member'),
+      3: t('profile.regularMember'),
+      4: t('profile.leader'),
     };
-    return levels[level] || `等级 ${level}`;
+    return levels[level] || t('profile.level', { level });
   };
 
   // 获取信任等级颜色
@@ -108,7 +110,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <MorphingSquare message="加载中..." />
+        <MorphingSquare message={t('common.loading')} />
       </div>
     );
   }
@@ -138,12 +140,12 @@ export default function ProfilePage() {
                     {getTrustLevelText(user.trust_level)}
                   </Badge>
                   {user.is_active ? (
-                    <Badge variant="default">活跃</Badge>
+                    <Badge variant="default">{t('profile.active')}</Badge>
                   ) : (
-                    <Badge variant="secondary">未激活</Badge>
+                    <Badge variant="secondary">{t('profile.inactive')}</Badge>
                   )}
                   {user.is_silenced && (
-                    <Badge variant="destructive">禁言中</Badge>
+                    <Badge variant="destructive">{t('profile.silenced')}</Badge>
                   )}
                   {user.beta === 1 && (
                     <Badge1 variant="turbo">
@@ -159,7 +161,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3 text-sm">
                 <IconUser className="size-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">用户 ID</div>
+                  <div className="font-medium">{t('profile.userId')}</div>
                   <div className="text-muted-foreground">{user.id}</div>
                 </div>
               </div>
@@ -167,9 +169,9 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3 text-sm">
                 <IconShield className="size-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">信任等级</div>
+                  <div className="font-medium">{t('profile.trustLevel')}</div>
                   <div className="text-muted-foreground">
-                    等级 {user.trust_level} - {getTrustLevelText(user.trust_level)}
+                    {t('profile.levelWithText', { level: user.trust_level, text: getTrustLevelText(user.trust_level) })}
                   </div>
                 </div>
               </div>
@@ -177,9 +179,9 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3 text-sm">
                 <IconCalendar className="size-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">账号创建时间</div>
+                  <div className="font-medium">{t('profile.accountCreated')}</div>
                   <div className="text-muted-foreground">
-                    {new Date(user.created_at).toLocaleString('zh-CN')}
+                    {new Date(user.created_at).toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -188,9 +190,9 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-3 text-sm">
                   <IconClock className="size-5 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">最后登录时间</div>
+                    <div className="font-medium">{t('profile.lastLogin')}</div>
                     <div className="text-muted-foreground">
-                      {new Date(user.last_login_at).toLocaleString('zh-CN')}
+                      {new Date(user.last_login_at).toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -206,13 +208,13 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-3">
-                我们推出了 Beta 计划，加入此计划后，您将获得部分预览功能的访问权限，这些功能可能尚不稳定，我们亦不会对因此产生的问题负责。
+                {t('profile.betaDescription')}
               </p>
               <Button
                 onClick={handleJoinBetaClick}
                 className="cursor-pointer"
               >
-                加入 Beta 计划
+                {t('profile.joinBetaProgram')}
               </Button>
             </CardContent>
           </Card>
@@ -222,9 +224,9 @@ export default function ProfilePage() {
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>确认加入 Beta 计划</DialogTitle>
+              <DialogTitle>{t('profile.confirmJoinBeta')}</DialogTitle>
               <DialogDescription>
-                一旦加入 Beta 计划，在新功能完全推出之前将无法退出。Beta 功能可能不稳定，确认继续吗？
+                {t('profile.betaWarning')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -235,14 +237,14 @@ export default function ProfilePage() {
                 size="lg"
                 className='cursor-pointer'
               >
-                取消
+                {t('common.cancel')}
               </Button>
               <StatefulButton
                 onClick={handleConfirmJoinBeta}
                 disabled={isJoiningBeta}
                 className='cursor-pointer'
               >
-                确认加入
+                {t('profile.confirmJoin')}
               </StatefulButton>
             </DialogFooter>
           </DialogContent>

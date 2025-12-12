@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Gemini, Claude, OpenAI } from '@lobehub/icons';
 import { IconCpu } from '@tabler/icons-react';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 interface ModelData {
   name: string;
@@ -41,6 +42,7 @@ const MODEL_ORDER: string[] = [
 ];
 
 export function SharedPoolModels() {
+  const { t } = useTranslation();
   const [models, setModels] = useState<ModelData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export function SharedPoolModels() {
         });
         setModels(sorted);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载模型数据失败');
+        setError(err instanceof Error ? err.message : t('dashboard.loadingError'));
       } finally {
         setIsLoading(false);
       }
@@ -114,17 +116,17 @@ export function SharedPoolModels() {
   };
 
   const formatResetTime = (time: string | null) => {
-    if (!time) return '无限制';
+    if (!time) return t('accounts.unlimited');
     const date = new Date(time);
     const now = new Date();
     const diff = date.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (diff < 0) return '已过期';
-    if (hours > 24) return `${Math.floor(hours / 24)}天后`;
-    if (hours > 0) return `${hours}小时${minutes}分钟后`;
-    return `${minutes}分钟后`;
+
+    if (diff < 0) return t('sharedPool.expired');
+    if (hours > 24) return t('sharedPool.daysLater', { days: Math.floor(hours / 24) });
+    if (hours > 0) return t('sharedPool.hoursMinutesLater', { hours, minutes });
+    return t('sharedPool.minutesLater', { minutes });
   };
 
   if (isLoading) {
@@ -170,9 +172,9 @@ export function SharedPoolModels() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <IconCpu className="size-5" />
-            共享池模型配额
+            {t('dashboard.sharedPoolModels')}
           </CardTitle>
-          <CardDescription>各模型的配额使用情况</CardDescription>
+          <CardDescription>{t('sharedPool.quotaUsageInfo')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500">
@@ -187,27 +189,25 @@ export function SharedPoolModels() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          模型配额
+          {t('dashboard.sharedPoolModels')}
         </CardTitle>
         <CardDescription>
-          Antigravity 共享池中有 {models.length} 个模型可用
+          {t('dashboard.modelsAvailableInPool', { count: models.length })}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {models.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg mb-2">暂无模型数据</p>
+            <p className="text-lg mb-2">{t('dashboard.noModelData')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[180px]">模型名称</TableHead>
-                  <TableHead className="min-w-[100px]">剩余配额</TableHead>
-                  <TableHead className="min-w-[100px]">可用账号</TableHead>
-                  <TableHead className="min-w-[80px]">状态</TableHead>
-                  <TableHead className="min-w-[120px]">配额重置</TableHead>
+                  <TableHead className="min-w-[180px]">{t('accounts.modelName')}</TableHead>
+                  <TableHead className="min-w-[100px]">{t('accounts.quota')}</TableHead>
+                  <TableHead className="min-w-[100px]">{t('accounts.status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -227,12 +227,12 @@ export function SharedPoolModels() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="whitespace-nowrap">
-                          {model.stats.available_cookies} 个
+                          {t('sharedPool.accountCount', { count: model.stats.available_cookies })}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={isAvailable ? 'default' : 'secondary'} className="whitespace-nowrap">
-                          {isAvailable ? '可用' : '不可用'}
+                          {isAvailable ? t('sharedPool.available') : t('sharedPool.unavailable')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">

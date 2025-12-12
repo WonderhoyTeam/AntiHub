@@ -12,6 +12,7 @@ import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Shimmer } from "./shimmer";
+import { useTranslation } from "@/lib/i18n/hooks";
 
 type ReasoningContextValue = {
   isStreaming: boolean;
@@ -113,19 +114,20 @@ export const Reasoning = memo(
 
 export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 
-const getThinkingMessage = (isStreaming: boolean, duration?: number) => {
+const getThinkingMessage = (isStreaming: boolean, duration: number | undefined, t: (key: string, params?: Record<string, string | number>) => string) => {
   if (isStreaming || duration === 0) {
-    return <Shimmer duration={1}>正在思考中</Shimmer>;
+    return <Shimmer duration={1}>{t('thinking.inProgress')}</Shimmer>;
   }
   if (duration === undefined) {
-    return <p>已完成思考</p>;
+    return <p>{t('thinking.completed')}</p>;
   }
-  return <p>思考了 {duration} 秒</p>;
+  return <p>{t('thinking.duration', { duration })}</p>;
 };
 
 export const ReasoningTrigger = memo(
   ({ className, children, ...props }: ReasoningTriggerProps) => {
     const { isStreaming, isOpen, duration } = useReasoning();
+    const { t } = useTranslation();
 
     return (
       <CollapsibleTrigger
@@ -138,7 +140,7 @@ export const ReasoningTrigger = memo(
         {children ?? (
           <>
             <BrainIcon className="size-4" />
-            {getThinkingMessage(isStreaming, duration)}
+            {getThinkingMessage(isStreaming, duration, t)}
             <ChevronDownIcon
               className={cn(
                 "size-4 transition-transform",

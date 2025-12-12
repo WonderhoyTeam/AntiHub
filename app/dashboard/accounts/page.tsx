@@ -49,7 +49,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip-card';
-import { IconCirclePlusFilled, IconDotsVertical, IconRefresh, IconTrash, IconToggleLeft, IconToggleRight, IconExternalLink, IconChartBar, IconChevronDown, IconEdit, IconAlertTriangle, IconArrowsExchange } from '@tabler/icons-react';
+import { IconCirclePlusFilled, IconDotsVertical, IconRefresh, IconTrash, IconToggleLeft, IconToggleRight, IconChartBar, IconEdit, IconAlertTriangle, IconArrowsExchange } from '@tabler/icons-react';
 import {
   Select,
   SelectContent,
@@ -60,8 +60,10 @@ import {
 import { MorphingSquare } from '@/components/ui/morphing-square';
 import { Gemini, Claude, OpenAI } from '@lobehub/icons';
 import { Badge as Badge1 } from '@/components/ui/badge-1';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 export default function AccountsPage() {
+  const { t } = useTranslation();
   const toasterRef = useRef<ToasterRef>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [kiroAccounts, setKiroAccounts] = useState<KiroAccount[]>([]);
@@ -77,7 +79,7 @@ export default function AccountsPage() {
   // 配额查看 Dialog 状态
   const [isQuotaDialogOpen, setIsQuotaDialogOpen] = useState(false);
   const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
-  const [quotas, setQuotas] = useState<any>(null);
+  const [quotas, setQuotas] = useState<Record<string, unknown> | null>(null);
   const [isLoadingQuotas, setIsLoadingQuotas] = useState(false);
 
   // 重命名 Kiro 账号 Dialog 状态
@@ -95,7 +97,7 @@ export default function AccountsPage() {
   // Kiro 账号详情 Dialog 状态
   const [isKiroDetailDialogOpen, setIsKiroDetailDialogOpen] = useState(false);
   const [detailAccount, setDetailAccount] = useState<KiroAccount | null>(null);
-  const [detailBalance, setDetailBalance] = useState<any>(null);
+  const [detailBalance, setDetailBalance] = useState<Record<string, unknown> | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   // 确认对话框状态
@@ -152,8 +154,8 @@ export default function AccountsPage() {
       }
     } catch (err) {
       toasterRef.current?.show({
-        title: '加载失败',
-        message: err instanceof Error ? err.message : '加载账号列表失败',
+        title: t('accounts.loadingFailed'),
+        message: err instanceof Error ? err.message : t('accounts.loadAccountsFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -200,15 +202,15 @@ export default function AccountsPage() {
           : a
       ));
       toasterRef.current?.show({
-        title: '状态已更新',
+        title: t('accounts.statusUpdated'),
         message: `账号已${newStatus === 1 ? '启用' : '禁用'}`,
         variant: 'success',
         position: 'top-right',
       });
     } catch (err) {
       toasterRef.current?.show({
-        title: '更新失败',
-        message: err instanceof Error ? err.message : '更新状态失败',
+        title: t('accounts.updateFailed'),
+        message: err instanceof Error ? err.message : t('accounts.updateStatusFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -267,7 +269,7 @@ export default function AccountsPage() {
         } catch (err) {
           toasterRef.current?.show({
             title: '转换失败',
-            message: err instanceof Error ? err.message : '转换账号类型失败',
+            message: err instanceof Error ? err.message : t('accounts.convertTypeFailed'),
             variant: 'error',
             position: 'top-right',
           });
@@ -288,15 +290,15 @@ export default function AccountsPage() {
           await deleteAccount(cookieId);
           setAccounts(accounts.filter(a => a.cookie_id !== cookieId));
           toasterRef.current?.show({
-            title: '删除成功',
-            message: '账号已删除',
+            title: t('accounts.deleteSuccess'),
+            message: t('accounts.accountDeleted'),
             variant: 'success',
             position: 'top-right',
           });
         } catch (err) {
           toasterRef.current?.show({
-            title: '删除失败',
-            message: err instanceof Error ? err.message : '删除失败',
+            title: t('accounts.deleteFailed'),
+            message: err instanceof Error ? err.message : t('accounts.deleteFailed'),
             variant: 'error',
             position: 'top-right',
           });
@@ -317,15 +319,15 @@ export default function AccountsPage() {
           await deleteKiroAccount(accountId);
           setKiroAccounts(kiroAccounts.filter(a => a.account_id !== accountId));
           toasterRef.current?.show({
-            title: '删除成功',
-            message: 'Kiro账号已删除',
+            title: t('accounts.deleteSuccess'),
+            message: t('accounts.kiroAccountDeleted'),
             variant: 'success',
             position: 'top-right',
           });
         } catch (err) {
           toasterRef.current?.show({
-            title: '删除失败',
-            message: err instanceof Error ? err.message : '删除失败',
+            title: t('accounts.deleteFailed'),
+            message: err instanceof Error ? err.message : t('accounts.deleteFailed'),
             variant: 'error',
             position: 'top-right',
           });
@@ -344,15 +346,15 @@ export default function AccountsPage() {
           : a
       ));
       toasterRef.current?.show({
-        title: '状态已更新',
+        title: t('accounts.statusUpdated'),
         message: `账号已${newStatus === 1 ? '启用' : '禁用'}`,
         variant: 'success',
         position: 'top-right',
       });
     } catch (err) {
       toasterRef.current?.show({
-        title: '更新失败',
-        message: err instanceof Error ? err.message : '更新状态失败',
+        title: t('accounts.updateFailed'),
+        message: err instanceof Error ? err.message : t('accounts.updateStatusFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -376,8 +378,8 @@ export default function AccountsPage() {
 
     if (!newAntigravityAccountName.trim()) {
       toasterRef.current?.show({
-        title: '输入错误',
-        message: '账号名称不能为空',
+        title: t('accounts.inputError'),
+        message: t('accounts.nameCannotBeEmpty'),
         variant: 'warning',
         position: 'top-right',
       });
@@ -394,15 +396,15 @@ export default function AccountsPage() {
       ));
       setIsAntigravityRenameDialogOpen(false);
       toasterRef.current?.show({
-        title: '重命名成功',
-        message: '账号名称已更新',
+        title: t('accounts.renameSuccess'),
+        message: t('accounts.nameUpdated'),
         variant: 'success',
         position: 'top-right',
       });
     } catch (err) {
       toasterRef.current?.show({
-        title: '重命名失败',
-        message: err instanceof Error ? err.message : '更新账号名称失败',
+        title: t('accounts.renameFailed'),
+        message: err instanceof Error ? err.message : t('accounts.updateNameFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -416,8 +418,8 @@ export default function AccountsPage() {
 
     if (!newAccountName.trim()) {
       toasterRef.current?.show({
-        title: '输入错误',
-        message: '账号名称不能为空',
+        title: t('accounts.inputError'),
+        message: t('accounts.nameCannotBeEmpty'),
         variant: 'warning',
         position: 'top-right',
       });
@@ -434,15 +436,15 @@ export default function AccountsPage() {
       ));
       setIsRenameDialogOpen(false);
       toasterRef.current?.show({
-        title: '重命名成功',
-        message: '账号名称已更新',
+        title: t('accounts.renameSuccess'),
+        message: t('accounts.nameUpdated'),
         variant: 'success',
         position: 'top-right',
       });
     } catch (err) {
       toasterRef.current?.show({
-        title: '重命名失败',
-        message: err instanceof Error ? err.message : '更新账号名称失败',
+        title: t('accounts.renameFailed'),
+        message: err instanceof Error ? err.message : t('accounts.updateNameFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -463,7 +465,7 @@ export default function AccountsPage() {
     } catch (err) {
       toasterRef.current?.show({
         title: '加载失败',
-        message: err instanceof Error ? err.message : '加载余额信息失败',
+        message: err instanceof Error ? err.message : t('accounts.loadBalanceFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -484,7 +486,7 @@ export default function AccountsPage() {
     } catch (err) {
       toasterRef.current?.show({
         title: '加载失败',
-        message: err instanceof Error ? err.message : '加载配额信息失败',
+        message: err instanceof Error ? err.message : t('accounts.loadQuotaFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -507,14 +509,14 @@ export default function AccountsPage() {
         )
       );
       toasterRef.current?.show({
-        title: '状态已更新',
+        title: t('accounts.statusUpdated'),
         message: `模型 ${getModelDisplayName(modelName)} 已${newStatus === 1 ? '启用' : '禁用'}`,
         variant: 'success',
         position: 'top-right',
       });
     } catch (err) {
       toasterRef.current?.show({
-        title: '更新失败',
+        title: t('accounts.updateFailed'),
         message: err instanceof Error ? err.message : '更新模型状态失败',
         variant: 'error',
         position: 'top-right',
@@ -591,7 +593,7 @@ export default function AccountsPage() {
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         <div className="px-4 lg:px-6">
           <div className="flex items-center justify-center min-h-screen">
-            <MorphingSquare message="加载中..." />
+            <MorphingSquare message={t('common.loading')} />
           </div>
         </div>
       </div>
@@ -656,11 +658,11 @@ export default function AccountsPage() {
               ) : (
                 <IconRefresh className="size-4" />
               )}
-              <span className="ml-2">刷新</span>
+              <span className="ml-2">{t('common.refresh')}</span>
             </Button>
             <Button size="default" onClick={handleAddAccount}>
               <IconCirclePlusFilled className="size-4" />
-              <span className="ml-2">添加账号</span>
+              <span className="ml-2">{t('accounts.addAccount')}</span>
             </Button>
           </div>
         </div>
@@ -671,29 +673,29 @@ export default function AccountsPage() {
         {activeTab === 'antigravity' && (
           <Card>
             <CardHeader className="text-left">
-              <CardTitle className="text-left">Antigravity账号</CardTitle>
+              <CardTitle className="text-left">{t('accounts.antigravityAccounts')}</CardTitle>
               <CardDescription className="text-left">
-                共 {accounts.length} 个账号
+                {t('accounts.totalAccounts', { count: accounts.length })}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {accounts.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg mb-2">暂无Antigravity账号</p>
-                  <p className="text-sm">点击"添加账号"按钮添加您的第一个账号</p>
+                  <p className="text-lg mb-2">{t('accounts.noAntigravityAccounts')}</p>
+                  <p className="text-sm">{t('accounts.clickToAddFirst')}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
                   <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[200px]">账号 ID</TableHead>
-                          <TableHead className="min-w-[120px]">账号名称</TableHead>
-                          <TableHead className="min-w-[80px]">类型</TableHead>
-                          <TableHead className="min-w-[80px]">状态</TableHead>
-                          <TableHead className="min-w-[100px]">添加时间</TableHead>
-                          <TableHead className="min-w-[100px]">最后使用</TableHead>
-                          <TableHead className="text-right min-w-[80px]">操作</TableHead>
+                          <TableHead className="min-w-[200px]">{t('accounts.accountId')}</TableHead>
+                          <TableHead className="min-w-[120px]">{t('accounts.accountName')}</TableHead>
+                          <TableHead className="min-w-[80px]">{t('settings.type')}</TableHead>
+                          <TableHead className="min-w-[80px]">{t('accounts.status')}</TableHead>
+                          <TableHead className="min-w-[100px]">{t('accounts.addedTime')}</TableHead>
+                          <TableHead className="min-w-[100px]">{t('accounts.lastUsed')}</TableHead>
+                          <TableHead className="text-right min-w-[80px]">{t('common.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -721,23 +723,23 @@ export default function AccountsPage() {
                                     <IconAlertTriangle className="size-4 text-amber-500 shrink-0 cursor-help" />
                                   </Tooltip>
                                 )}
-                                <span>{account.name || '未命名'}</span>
+                                <span>{account.name || t('accounts.unnamed')}</span>
                                 {account.need_refresh && (
                                   <Badge variant="outline" className="text-yellow-600 border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20">
                                     <IconAlertTriangle className="size-3 mr-1" />
-                                    需要重新登录
+                                    {t('accounts.needsRelogin')}
                                   </Badge>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <Badge variant={account.is_shared === 1 ? 'default' : 'secondary'} className="whitespace-nowrap">
-                                {account.is_shared === 1 ? '共享' : '专属'}
+                                {account.is_shared === 1 ? t('accounts.shared') : t('accounts.dedicated')}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge variant={account.status === 1 ? 'default' : 'outline'} className="whitespace-nowrap">
-                                {account.status === 1 ? '启用' : '禁用'}
+                                {account.status === 1 ? t('accounts.enabled') : t('accounts.disabled')}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -746,7 +748,7 @@ export default function AccountsPage() {
                             <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                               {account.last_used_at
                                 ? new Date(account.last_used_at).toLocaleDateString('zh-CN')
-                                : '从未使用'
+                                : t('accounts.neverUsed')
                               }
                             </TableCell>
                             <TableCell className="text-right">
@@ -759,11 +761,11 @@ export default function AccountsPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleViewQuotas(account)}>
                                     <IconChartBar className="size-4 mr-2" />
-                                    查看配额
+                                    {t('accounts.viewQuotas')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleRenameAntigravity(account)}>
                                     <IconEdit className="size-4 mr-2" />
-                                    重命名
+                                    {t('accounts.rename')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleToggleAccountType(account)}>
                                     <IconArrowsExchange className="size-4 mr-2" />
@@ -773,12 +775,12 @@ export default function AccountsPage() {
                                     {account.status === 1 ? (
                                       <>
                                         <IconToggleLeft className="size-4 mr-2" />
-                                        禁用
+                                        {t('accounts.disable')}
                                       </>
                                     ) : (
                                       <>
                                         <IconToggleRight className="size-4 mr-2" />
-                                        启用
+                                        {t('accounts.enable')}
                                       </>
                                     )}
                                   </DropdownMenuItem>
@@ -787,7 +789,7 @@ export default function AccountsPage() {
                                     className="text-red-600"
                                   >
                                     <IconTrash className="size-4 mr-2" />
-                                    删除
+                                    {t('common.delete')}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -807,7 +809,7 @@ export default function AccountsPage() {
           <Card>
             <CardHeader className="text-left">
               <CardTitle className="text-left flex items-center gap-2">
-                Kiro账号
+                {t('accounts.kiroAccounts')}
                 <Badge1 variant="turbo">Beta</Badge1>
               </CardTitle>
               <CardDescription className="text-left">
@@ -817,8 +819,8 @@ export default function AccountsPage() {
             <CardContent>
               {kiroAccounts.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg mb-2">暂无Kiro账号</p>
-                  <p className="text-sm">点击"添加账号"按钮添加您的第一个Kiro账号</p>
+                  <p className="text-lg mb-2">{t('accounts.noKiroAccounts')}</p>
+                  <p className="text-sm">{t('accounts.clickToAddFirstKiro')}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
@@ -841,7 +843,7 @@ export default function AccountsPage() {
                             {account.account_id}
                           </TableCell>
                           <TableCell>
-                            {account.account_name || account.email || '未命名'}
+                            {account.account_name || account.email || t('accounts.unnamed')}
                           </TableCell>
                           <TableCell className="font-mono text-sm">
                             {kiroBalances[account.account_id] !== undefined
@@ -871,7 +873,7 @@ export default function AccountsPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewKiroDetail(account)}>
                                   <IconChartBar className="size-4 mr-2" />
-                                  详细信息
+                                  {t('accounts.detailsInfo')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleRenameKiro(account)}>
                                   <IconEdit className="size-4 mr-2" />
@@ -922,16 +924,16 @@ export default function AccountsPage() {
       <Dialog open={isQuotaDialogOpen} onOpenChange={setIsQuotaDialogOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[900px] max-h-[90vh] p-0">
           <DialogHeader className="px-4 pt-6 pb-2 md:px-6 text-left">
-            <DialogTitle className="text-left">账号配额详情</DialogTitle>
+            <DialogTitle className="text-left">{t('accounts.accountQuotaDetails')}</DialogTitle>
             <DialogDescription className="break-all text-left">
-              账号 ID: {currentAccount?.cookie_id}
+              {t('accounts.accountId')}: {currentAccount?.cookie_id}
             </DialogDescription>
           </DialogHeader>
 
           <div className="px-4 pb-6 md:px-6 overflow-y-auto max-h-[calc(90vh-120px)]">
             {isLoadingQuotas ? (
               <div className="flex items-center justify-center py-12">
-                <MorphingSquare message="加载配额信息..." />
+                <MorphingSquare message={t('accounts.loadingQuotaInfo')} />
               </div>
             ) : quotas && Array.isArray(quotas) && quotas.length > 0 ? (
               <div className="overflow-x-auto -mx-4 md:mx-0">
@@ -940,11 +942,11 @@ export default function AccountsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[160px] sticky left-0 bg-background z-10">模型名称</TableHead>
-                          <TableHead className="min-w-[90px]">配额</TableHead>
-                          <TableHead className="min-w-[70px]">状态</TableHead>
-                          <TableHead className="min-w-[140px]">重置时间</TableHead>
-                          <TableHead className="text-right min-w-[70px] sticky right-0 bg-background z-10">操作</TableHead>
+                          <TableHead className="min-w-[160px] sticky left-0 bg-background z-10">{t('accounts.modelName')}</TableHead>
+                          <TableHead className="min-w-[90px]">{t('accounts.quota')}</TableHead>
+                          <TableHead className="min-w-[70px]">{t('accounts.status')}</TableHead>
+                          <TableHead className="min-w-[140px]">{t('accounts.resetTime')}</TableHead>
+                          <TableHead className="text-right min-w-[70px] sticky right-0 bg-background z-10">{t('common.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -963,7 +965,7 @@ export default function AccountsPage() {
                             </TableCell>
                             <TableCell>
                               <span className={`text-xs md:text-sm ${quota.status === 1 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                {quota.status === 1 ? '正常' : '禁用'}
+                                {quota.status === 1 ? t('accounts.normal') : t('accounts.disabled')}
                               </span>
                             </TableCell>
                             <TableCell className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">
@@ -974,7 +976,7 @@ export default function AccountsPage() {
                                   hour: '2-digit',
                                   minute: '2-digit'
                                 })
-                                : '无限制'
+                                : t('accounts.unlimited')
                               }
                             </TableCell>
                             <TableCell className="text-right sticky right-0 bg-background z-10">
@@ -993,7 +995,7 @@ export default function AccountsPage() {
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
-                <p className="text-sm">暂无配额信息</p>
+                <p className="text-sm">{t('accounts.noQuotaInfo')}</p>
               </div>
             )}
           </div>
@@ -1004,15 +1006,15 @@ export default function AccountsPage() {
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>重命名账号</DialogTitle>
+            <DialogTitle>{t('accounts.renameAccount')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="account-name">新的账号名称</Label>
+              <Label htmlFor="account-name">{t('accounts.newAccountName')}</Label>
               <Input
                 id="account-name"
-                placeholder="输入账号名称"
+                placeholder={t('accounts.enterAccountName')}
                 value={newAccountName}
                 onChange={(e) => setNewAccountName(e.target.value)}
                 maxLength={50}
@@ -1031,7 +1033,7 @@ export default function AccountsPage() {
               onClick={() => setIsRenameDialogOpen(false)}
               disabled={isRenaming}
             >
-              取消
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSubmitRename}
@@ -1040,10 +1042,10 @@ export default function AccountsPage() {
               {isRenaming ? (
                 <>
                   <MorphingSquare className="size-4 mr-2" />
-                  保存中...
+                  {t('accounts.saving')}
                 </>
               ) : (
-                '保存'
+                t('common.save')
               )}
             </Button>
           </DialogFooter>
@@ -1054,7 +1056,7 @@ export default function AccountsPage() {
       <Dialog open={isAntigravityRenameDialogOpen} onOpenChange={setIsAntigravityRenameDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>重命名账号</DialogTitle>
+            <DialogTitle>{t('accounts.renameAccount')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -1062,7 +1064,7 @@ export default function AccountsPage() {
               <Label htmlFor="antigravity-account-name">新的账号名称</Label>
               <Input
                 id="antigravity-account-name"
-                placeholder="输入账号名称"
+                placeholder={t('accounts.enterAccountName')}
                 value={newAntigravityAccountName}
                 onChange={(e) => setNewAntigravityAccountName(e.target.value)}
                 maxLength={50}
@@ -1081,7 +1083,7 @@ export default function AccountsPage() {
               onClick={() => setIsAntigravityRenameDialogOpen(false)}
               disabled={isRenamingAntigravity}
             >
-              取消
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSubmitAntigravityRename}
@@ -1090,10 +1092,10 @@ export default function AccountsPage() {
               {isRenamingAntigravity ? (
                 <>
                   <MorphingSquare className="size-4 mr-2" />
-                  保存中...
+                  {t('accounts.saving')}
                 </>
               ) : (
-                '保存'
+                t('common.save')
               )}
             </Button>
           </DialogFooter>
@@ -1104,34 +1106,34 @@ export default function AccountsPage() {
       <Dialog open={isKiroDetailDialogOpen} onOpenChange={setIsKiroDetailDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>账号详细信息</DialogTitle>
+            <DialogTitle>{t('accounts.accountDetails')}</DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
             {isLoadingDetail ? (
               <div className="flex items-center justify-center py-12">
-                <MorphingSquare message="加载余额信息..." />
+                <MorphingSquare message={t('accounts.loadingBalanceInfo')} />
               </div>
             ) : detailBalance ? (
               <div className="space-y-6">
                 {/* 基本信息 */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground">基本信息</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground">{t('accounts.basicInfo')}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">账号ID</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.accountId')}</Label>
                       <p className="text-sm font-mono">{detailBalance.account_id}</p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">邮箱</Label>
-                      <p className="text-sm">{detailBalance.email || '未提供邮箱'}</p>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.email')}</Label>
+                      <p className="text-sm">{detailBalance.email || t('accounts.noEmail')}</p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">账号名称</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.accountName')}</Label>
                       <p className="text-sm">{detailBalance.account_name}</p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">订阅类型</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.subscriptionType')}</Label>
                       <Badge variant="secondary">{detailBalance.subscription}</Badge>
                     </div>
                   </div>
@@ -1139,40 +1141,40 @@ export default function AccountsPage() {
 
                 {/* 余额信息 */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground">余额信息</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground">{t('accounts.balanceInfo')}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">总可用余额</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.totalAvailableBalance')}</Label>
                       <p className="text-lg font-semibold text-green-600">
                         ${detailBalance.balance.available.toFixed(2)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">总额度</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.totalQuota')}</Label>
                       <p className="text-lg font-semibold">
                         ${detailBalance.balance.total_limit.toFixed(2)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">基础可用额度</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.baseAvailableQuota')}</Label>
                       <p className="text-sm font-mono">
                         ${detailBalance.balance.base_available.toFixed(2)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Bonus 可用额度</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.bonusAvailableQuota')}</Label>
                       <p className="text-sm font-mono text-blue-600">
                         ${detailBalance.balance.bonus_available.toFixed(2)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">当前使用量</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.currentUsage')}</Label>
                       <p className="text-sm font-mono">
                         ${detailBalance.balance.current_usage.toFixed(2)}
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">重置日期</Label>
+                      <Label className="text-xs text-muted-foreground">{t('accounts.resetDate')}</Label>
                       <p className="text-sm">
                         {new Date(detailBalance.balance.reset_date).toLocaleDateString('zh-CN')}
                       </p>
@@ -1183,7 +1185,7 @@ export default function AccountsPage() {
                 {/* 免费试用信息 */}
                 {detailBalance.free_trial && (
                   <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground">免费试用信息</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground">{t('accounts.freeTrialInfo')}</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">试用状态</Label>
@@ -1192,25 +1194,25 @@ export default function AccountsPage() {
                         </Badge>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">可用额度</Label>
+                        <Label className="text-xs text-muted-foreground">{t('accounts.availableQuota')}</Label>
                         <p className="text-sm font-mono">
                           ${detailBalance.free_trial.available.toFixed(2)}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">总限额</Label>
+                        <Label className="text-xs text-muted-foreground">{t('accounts.totalLimit')}</Label>
                         <p className="text-sm font-mono">
                           ${detailBalance.free_trial.limit.toFixed(2)}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">已使用</Label>
+                        <Label className="text-xs text-muted-foreground">{t('accounts.used')}</Label>
                         <p className="text-sm font-mono">
                           ${detailBalance.free_trial.usage.toFixed(2)}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">过期时间</Label>
+                        <Label className="text-xs text-muted-foreground">{t('accounts.expiryTime')}</Label>
                         <p className="text-sm">
                           {new Date(detailBalance.free_trial.expiry).toLocaleDateString('zh-CN')}
                         </p>
@@ -1222,7 +1224,7 @@ export default function AccountsPage() {
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
-                <p className="text-sm">暂无余额信息</p>
+                <p className="text-sm">{t('accounts.noBalanceInfo')}</p>
               </div>
             )}
           </div>
@@ -1232,7 +1234,7 @@ export default function AccountsPage() {
               variant="outline"
               onClick={() => setIsKiroDetailDialogOpen(false)}
             >
-              关闭
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1262,7 +1264,7 @@ export default function AccountsPage() {
               }}
               disabled={isConfirmLoading}
             >
-              {confirmDialogConfig?.cancelText || '取消'}
+              {confirmDialogConfig?.cancelText || t('common.cancel')}
             </Button>
             <Button
               variant={confirmDialogConfig?.variant === 'destructive' ? 'destructive' : 'default'}
@@ -1272,10 +1274,10 @@ export default function AccountsPage() {
               {isConfirmLoading ? (
                 <>
                   <MorphingSquare className="size-4 mr-2" />
-                  请稍等
+                  {t('accounts.pleaseWait')}
                 </>
               ) : (
-                confirmDialogConfig?.confirmText || '确认'
+                confirmDialogConfig?.confirmText || t('common.confirm')
               )}
             </Button>
           </DialogFooter>

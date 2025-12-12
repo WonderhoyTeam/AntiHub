@@ -2,8 +2,11 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconHammer, IconAlertTriangle } from '@tabler/icons-react';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 export default function HelpPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
       <div className="px-4 lg:px-6">
@@ -17,17 +20,17 @@ export default function HelpPage() {
                 <IconHammer className="size-16 text-primary" strokeWidth={1.5} />
               </div>
             </div>
-            
+
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">页面施工中</h2>
+              <h2 className="text-2xl font-bold">{t('help.underConstruction')}</h2>
               <p className="text-muted-foreground max-w-md">
-                我们正在努力完善帮助文档，敬请期待！
+                {t('help.workingOnDocs')}
               </p>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
               <IconAlertTriangle className="size-4" />
-              <span>如有紧急问题，请联系管理员</span>
+              <span>{t('help.contactAdmin')}</span>
             </div>
           </CardContent>
         </Card>
@@ -36,36 +39,36 @@ export default function HelpPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">快速开始</CardTitle>
-              <CardDescription>即将推出</CardDescription>
+              <CardTitle className="text-lg">{t('help.quickStart')}</CardTitle>
+              <CardDescription>{t('help.comingSoon')}</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                了解如何快速开始使用 AntiHub 平台
+                {t('help.quickStartDesc')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">常见问题</CardTitle>
-              <CardDescription>即将推出</CardDescription>
+              <CardTitle className="text-lg">{t('help.faq')}</CardTitle>
+              <CardDescription>{t('help.comingSoon')}</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                查看常见问题和解决方案
+                {t('help.faqDesc')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">API 文档</CardTitle>
-              <CardDescription>即将推出</CardDescription>
+              <CardTitle className="text-lg">{t('help.apiDocs')}</CardTitle>
+              <CardDescription>{t('help.comingSoon')}</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                详细的 API 使用文档和示例
+                {t('help.apiDocsDesc')}
               </p>
             </CardContent>
           </Card>

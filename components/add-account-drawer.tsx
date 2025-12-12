@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Badge as Badge1 } from '@/components/ui/badge-1';
 import { cn } from '@/lib/utils';
 import Toaster, { ToasterRef } from '@/components/ui/toast';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 interface AddAccountDrawerProps {
   open: boolean;
@@ -26,6 +27,7 @@ interface AddAccountDrawerProps {
 }
 
 export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDrawerProps) {
+  const { t } = useTranslation();
   const toasterRef = useRef<ToasterRef>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -54,7 +56,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
       const user = await getCurrentUser();
       setHasBeta(user.beta === 1);
     } catch (err) {
-      console.error('检查Beta状态失败:', err);
+      console.error('Failed to check Beta status:', err);
       setHasBeta(false);
     } finally {
       setIsCheckingBeta(false);
@@ -77,8 +79,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
     if (step === 'platform') {
       if (!platform) {
         toasterRef.current?.show({
-          title: '选择平台',
-          message: '请选择一个平台',
+          title: t('addAccount.selectPlatform'),
+          message: t('addAccount.selectPlatformMessage'),
           variant: 'warning',
           position: 'top-right',
         });
@@ -93,8 +95,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
     } else if (step === 'provider') {
       if (!provider) {
         toasterRef.current?.show({
-          title: '选择提供商',
-          message: '请选择OAuth提供商',
+          title: t('addAccount.selectProvider'),
+          message: t('addAccount.selectProviderMessage'),
           variant: 'warning',
           position: 'top-right',
         });
@@ -118,8 +120,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
           setStep('authorize');
         } catch (err) {
           toasterRef.current?.show({
-            title: '获取失败',
-            message: err instanceof Error ? err.message : '获取授权链接失败',
+            title: t('addAccount.fetchFailed'),
+            message: err instanceof Error ? err.message : t('addAccount.fetchAuthUrlFailed'),
             variant: 'error',
             position: 'top-right',
           });
@@ -129,8 +131,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
     } else if (step === 'method') {
       if (!loginMethod) {
         toasterRef.current?.show({
-          title: '选择登录方式',
-          message: '请选择一种登录方式',
+          title: t('addAccount.selectLoginMethod'),
+          message: t('addAccount.selectLoginMethodMessage'),
           variant: 'warning',
           position: 'top-right',
         });
@@ -141,8 +143,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
       if (loginMethod === 'antihook') {
         handleOpenAntihook();
         toasterRef.current?.show({
-          title: '请在 Antihook 中继续操作',
-          message: '授权成功后账号将自动添加到您的账号列表',
+          title: t('addAccount.continueInAntihook'),
+          message: t('addAccount.autoAddAfterAuth'),
           variant: 'success',
           position: 'top-right',
         });
@@ -214,8 +216,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
         }
         setIsWaitingAuth(false);
         toasterRef.current?.show({
-          title: '授权超时',
-          message: '授权时间已过期，请重新开始',
+          title: t('addAccount.authTimeout'),
+          message: t('addAccount.authTimeoutMessage'),
           variant: 'warning',
           position: 'top-right',
         });
@@ -247,8 +249,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
           }
 
           toasterRef.current?.show({
-            title: '授权成功',
-            message: 'Kiro账号已成功添加',
+            title: t('addAccount.authSuccess'),
+            message: t('addAccount.kiroAccountAdded'),
             variant: 'success',
             position: 'top-right',
           });
@@ -270,8 +272,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
 
           setIsWaitingAuth(false);
           toasterRef.current?.show({
-            title: '授权失败',
-            message: result.message || '授权失败，请重试',
+            title: t('addAccount.authFailed'),
+            message: result.message || t('addAccount.authFailedRetry'),
             variant: 'error',
             position: 'top-right',
           });
@@ -285,8 +287,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
 
           setIsWaitingAuth(false);
           toasterRef.current?.show({
-            title: '授权已过期',
-            message: '请返回重新开始',
+            title: t('addAccount.authExpired'),
+            message: t('addAccount.authExpiredMessage'),
             variant: 'warning',
             position: 'top-right',
           });
@@ -294,7 +296,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
         // status === 'pending' 时继续轮询
 
       } catch (error) {
-        console.error('轮询OAuth状态失败:', error);
+        console.error('Failed to poll OAuth status:', error);
       }
     }, 3000); // 每3秒轮询一次
   };
@@ -309,8 +311,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
   const handleSubmitCallback = async () => {
     if (!callbackUrl.trim()) {
       toasterRef.current?.show({
-        title: '输入错误',
-        message: '请输入回调地址',
+        title: t('addAccount.inputError'),
+        message: t('addAccount.enterCallbackUrl'),
         variant: 'warning',
         position: 'top-right',
       });
@@ -320,8 +322,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
     try {
       await submitOAuthCallback(callbackUrl);
       toasterRef.current?.show({
-        title: '添加成功',
-        message: '账号已成功添加',
+        title: t('addAccount.addSuccess'),
+        message: t('addAccount.accountAddedSuccessfully'),
         variant: 'success',
         position: 'top-right',
       });
@@ -333,8 +335,8 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
       onSuccess?.();
     } catch (err) {
       toasterRef.current?.show({
-        title: '提交失败',
-        message: err instanceof Error ? err.message : '提交回调失败',
+        title: t('addAccount.submitFailed'),
+        message: err instanceof Error ? err.message : t('addAccount.submitCallbackFailed'),
         variant: 'error',
         position: 'top-right',
       });
@@ -422,7 +424,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
     >
       <DrawerContent>
         <DrawerHeader className="relative">
-          <DrawerTitle>添加账号向导</DrawerTitle>
+          <DrawerTitle>{t('addAccount.title')}</DrawerTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -430,7 +432,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
             onClick={handleClose}
           >
             <IconX className="h-4 w-4" />
-            <span className="sr-only">关闭</span>
+            <span className="sr-only">{t('common.close')}</span>
           </Button>
         </DrawerHeader>
 
@@ -441,7 +443,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
           {step === 'platform' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                你希望添加哪种类型的账号？
+                {t('addAccount.selectAccountTypePrompt')}
               </p>
 
               <div className="space-y-3">
@@ -467,10 +469,10 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold">Antigravity</h3>
-                      <Badge variant="secondary">可用</Badge>
+                      <Badge variant="secondary">{t('addAccount.available')}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      OAuth 授权登录
+                      {t('addAccount.oauthLogin')}
                     </p>
                   </div>
                 </label>
@@ -502,7 +504,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                         <Badge1 variant="turbo">Beta</Badge1>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Google 与 Github OAuth
+                        {t('addAccount.googleGithubOauth')}
                       </p>
                     </div>
                   </label>
@@ -515,7 +517,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
           {step === 'provider' && platform === 'kiro' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                你希望以何种方式登录 Kiro ?
+                {t('addAccount.selectKiroLoginMethod')}
               </p>
 
               <div className="space-y-3">
@@ -544,7 +546,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   <div className="flex-1">
                     <h3 className="font-semibold">Google</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      使用 Google 账号授权
+                      {t('addAccount.useGoogleAuth')}
                     </p>
                   </div>
                 </label>
@@ -571,7 +573,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   <div className="flex-1">
                     <h3 className="font-semibold">Github</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      使用 Github 账号授权
+                      {t('addAccount.useGithubAuth')}
                     </p>
                   </div>
                 </label>
@@ -579,9 +581,9 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
 
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                  <strong>重要指示</strong>
+                  <strong>{t('addAccount.importantNote')}</strong>
                   <br />
-                  要登录 Kiro ，请先下载并运行至少一次{' '}
+                  {t('addAccount.kiroLoginInstruction')}{' '}
                   <a
                     href="https://github.com/AntiHub-Project/AntiHook/releases"
                     target="_blank"
@@ -600,7 +602,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
           {step === 'type' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                选择 {platform === 'antigravity' ? 'Antigravity' : 'Kiro'} 账号类型
+                {t('addAccount.selectAccountType')} {platform === 'antigravity' ? 'Antigravity' : 'Kiro'}
               </p>
 
               <div className="space-y-3">
@@ -621,11 +623,11 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">专属账号</h3>
+                      <h3 className="font-semibold">{t('addAccount.dedicatedAccount')}</h3>
                     </div>
                     {accountType === 0 && (
                       <p className="text-xs text-red-400 mt-2">
-                        此账号不会被加入共享账号池，您也不会从中获得额外的共享配额。
+                        {t('addAccount.dedicatedAccountNote')}
                       </p>
                     )}
                   </div>
@@ -653,15 +655,15 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">共享账号</h3>
+                      <h3 className="font-semibold">{t('addAccount.sharedAccount')}</h3>
                     </div>
                     {platform === 'kiro' ? (
                       <p className="text-xs text-muted-foreground mt-2">
-                        此选项在 Beta 中暂不可用。
+                        {t('addAccount.sharedNotAvailableInBeta')}
                       </p>
                     ) : accountType === 1 ? (
                       <p className="text-xs text-red-400 mt-2">
-                        您的帐号将会加入共享账号池以供他人使用。作为回报，您可以获得2倍于您提交的共享账号的配额。
+                        {t('addAccount.sharedAccountNote')}
                       </p>
                     ) : null}
                   </div>
@@ -674,7 +676,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
           {step === 'method' && platform === 'antigravity' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                选择登录方式
+                {t('addAccount.chooseLoginMethod')}
               </p>
 
               <div className="space-y-3">
@@ -695,11 +697,11 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">通过 Antihook 登录</h3>
+                      <h3 className="font-semibold">{t('addAccount.loginViaAntihook')}</h3>
                     </div>
                     {loginMethod === 'antihook' && (
                       <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                        请确保已安装并运行{' '}
+                        {t('addAccount.ensureAntihookRunning')}{' '}
                         <a
                           href="https://github.com/AntiHub-Project/AntiHook/releases"
                           target="_blank"
@@ -708,7 +710,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                         >
                           AntiHook
                         </a>
-                        {' '}客户端
+                        {' '}{t('addAccount.client')}
                       </p>
                     )}
                   </div>
@@ -730,7 +732,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                     className="w-4 h-4 mt-1"
                   />
                   <div className="flex-1">
-                    <h3 className="font-semibold">手动提交回调</h3>
+                    <h3 className="font-semibold">{t('addAccount.manualCallbackSubmit')}</h3>
                   </div>
                 </label>
               </div>
@@ -744,9 +746,9 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                 // Kiro账号 - 显示等待授权状态
                 <>
                   <div className="space-y-3">
-                    <Label className="text-base font-semibold">账号授权</Label>
+                    <Label className="text-base font-semibold">{t('addAccount.accountAuth')}</Label>
                     <p className="text-sm text-muted-foreground">
-                      点击下方按钮在新窗口完成 {provider} 授权
+                      {t('addAccount.completeAuthInNewWindow')} {provider}
                     </p>
                     <div className="flex gap-2">
                       <Button
@@ -756,15 +758,15 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                         disabled={!oauthUrl || countdown === 0}
                       >
                         <IconExternalLink className="size-4 mr-2" />
-                        打开授权页面
+                        {t('addAccount.openAuthPage')}
                       </Button>
                       <Button
                         onClick={() => {
                           if (oauthUrl) {
                             navigator.clipboard.writeText(oauthUrl);
                             toasterRef.current?.show({
-                              title: '复制成功',
-                              message: '授权链接已复制到剪贴板',
+                              title: t('addAccount.copySuccess'),
+                              message: t('addAccount.authLinkCopied'),
                               variant: 'success',
                               position: 'top-right',
                             });
@@ -775,7 +777,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                         disabled={!oauthUrl || countdown === 0}
                       >
                         <IconCopy className="size-4 mr-2" />
-                        复制链接
+                        {t('addAccount.copyLink')}
                       </Button>
                     </div>
                   </div>
@@ -787,15 +789,15 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                           <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                         </div>
                         <div className="text-center space-y-2">
-                          <p className="font-semibold text-lg">AntiHub 正在等待授权</p>
+                          <p className="font-semibold text-lg">{t('addAccount.waitingForAuth')}</p>
                           <p className="text-sm text-muted-foreground">
-                            请在新窗口中完成 {provider} 授权
+                            {t('addAccount.completeAuthInNewWindow')} {provider}
                           </p>
                           <p className="text-2xl font-mono font-bold text-primary">
                             {formatCountdown(countdown)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            授权完成后将自动添加账号
+                            {t('addAccount.autoAddAfterAuthComplete')}
                           </p>
                         </div>
                       </div>
@@ -805,7 +807,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                   {countdown === 0 && (
                     <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
                       <p className="text-sm text-destructive text-center">
-                        授权已超时，请返回重新开始
+                        {t('addAccount.authTimeoutGoBack')}
                       </p>
                     </div>
                   )}
@@ -814,9 +816,9 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                 // Antigravity账号 - 手动提交回调
                 <>
                   <div className="space-y-3">
-                    <Label className="text-base font-semibold">账号授权</Label>
+                    <Label className="text-base font-semibold">{t('addAccount.accountAuth')}</Label>
                     <p className="text-sm text-muted-foreground">
-                      请完成 OAuth 授权。
+                      {t('addAccount.completeOAuthAuth')}
                     </p>
                     <div className="flex gap-2">
                       <Button
@@ -826,15 +828,15 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                         disabled={!oauthUrl}
                       >
                         <IconExternalLink className="size-4 mr-2" />
-                        打开授权页面
+                        {t('addAccount.openAuthPage')}
                       </Button>
                       <Button
                         onClick={() => {
                           if (oauthUrl) {
                             navigator.clipboard.writeText(oauthUrl);
                             toasterRef.current?.show({
-                              title: '复制成功',
-                              message: '授权链接已复制到剪贴板',
+                              title: t('addAccount.copySuccess'),
+                              message: t('addAccount.authLinkCopied'),
                               variant: 'success',
                               position: 'top-right',
                             });
@@ -845,21 +847,21 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                         disabled={!oauthUrl}
                       >
                         <IconCopy className="size-4 mr-2" />
-                        复制链接
+                        {t('addAccount.copyLink')}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <Label htmlFor="callback-url" className="text-base font-semibold">
-                      回调地址
+                      {t('addAccount.callbackUrl')}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      请粘贴完成授权后浏览器地址栏的完整 URL。
+                      {t('addAccount.pasteCallbackUrlInstruction')}
                     </p>
                     <Input
                       id="callback-url"
-                      placeholder="在此处粘贴回调地址"
+                      placeholder={t('addAccount.pasteCallbackUrlHere')}
                       value={callbackUrl}
                       onChange={(e) => setCallbackUrl(e.target.value)}
                       className="font-mono text-sm h-12"
@@ -879,7 +881,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
               className="flex-1 cursor-pointer"
               disabled={platform === 'kiro' && isWaitingAuth && countdown > 0}
             >
-              上一步
+              {t('addAccount.previous')}
             </Button>
           )}
 
@@ -891,7 +893,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                 disabled={isWaitingAuth && countdown > 0}
                 className="flex-1 cursor-pointer"
               >
-                {isWaitingAuth && countdown > 0 ? '等待授权中...' : '关闭'}
+                {isWaitingAuth && countdown > 0 ? t('addAccount.waitingAuth') : t('common.close')}
               </Button>
             ) : (
               // Antigravity账号需要提交回调
@@ -900,7 +902,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
                 disabled={!callbackUrl.trim()}
                 className="flex-1 cursor-pointer"
               >
-                完成添加
+                {t('addAccount.completeAdd')}
               </StatefulButton>
             )
           ) : step === 'method' ? (
@@ -909,7 +911,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
               disabled={!loginMethod}
               className="flex-1 cursor-pointer"
             >
-              继续
+              {t('addAccount.continue')}
             </Button>
           ) : (
             <Button
@@ -917,7 +919,7 @@ export function AddAccountDrawer({ open, onOpenChange, onSuccess }: AddAccountDr
               disabled={step === 'platform' && !platform}
               className="flex-1 cursor-pointer"
             >
-              继续
+              {t('addAccount.continue')}
             </Button>
           )}
         </DrawerFooter>

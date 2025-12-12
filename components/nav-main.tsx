@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { AddAccountDrawer } from "@/components/add-account-drawer"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export function NavMain({
   items,
@@ -23,6 +24,7 @@ export function NavMain({
   }[]
 }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const { t } = useTranslation()
 
   return (
     <>
@@ -31,12 +33,12 @@ export function NavMain({
           <SidebarMenu>
             <SidebarMenuItem className="flex items-center gap-2">
               <SidebarMenuButton
-                tooltip="添加账号"
+                tooltip={t('accounts.addAccount')}
                 onClick={() => setIsDrawerOpen(true)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear cursor-pointer"
               >
                 <IconCirclePlusFilled />
-                <span>添加账号</span>
+                <span>{t('accounts.addAccount')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

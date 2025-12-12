@@ -69,6 +69,7 @@ import {
 import { StickyBanner } from "@/components/ui/sticky-banner";
 import { CheckIcon } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslation } from '@/lib/i18n/hooks';
 
 interface MessageType {
   key: string;
@@ -197,6 +198,8 @@ const getAllModels = (): Array<{
 };
 
 export default function PlaygroundPage() {
+  const { t } = useTranslation();
+
   // API 类型状态
   const [apiType, setApiType] = useState<ApiType>('antigravity');
 
@@ -267,7 +270,7 @@ export default function PlaygroundPage() {
   const sendImageGenerationRequest = useCallback(
     async (prompt: string, files?: any[]) => {
       if (!model) {
-        toast.error('请先选择一个模型');
+        toast.error(t('playground.selectModelFirst'));
         return;
       }
 
@@ -345,7 +348,7 @@ export default function PlaygroundPage() {
           },
           (error) => {
             console.error('Image generation error:', error);
-            toast.error(`图片生成失败: ${error.message}`);
+            toast.error(`${t('playground.imageGenerationFailed')}: ${error.message}`);
           },
           () => {
             // 心跳回调 - 可以用于更新 UI 状态表示连接仍然活跃
@@ -392,17 +395,17 @@ export default function PlaygroundPage() {
               })
             );
           } else {
-            throw new Error('响应中没有图片数据');
+            throw new Error(t('playground.noImageDataInResponse'));
           }
         } else {
-          throw new Error('图片生成失败，未收到有效响应');
+          throw new Error(t('playground.imageGenerationFailedNoResponse'));
         }
 
         setStatus('ready');
         setStreamingMessageId(null);
       } catch (error) {
         console.error('Image generation error:', error);
-        toast.error('图片生成失败，请重试');
+        toast.error(t('playground.imageGenerationFailedRetry'));
 
         // 更新消息显示错误
         setMessages((prev) =>
@@ -412,7 +415,7 @@ export default function PlaygroundPage() {
                 ...msg,
                 versions: msg.versions.map((v) =>
                   v.id === assistantMessageId
-                    ? { ...v, content: '图片生成失败，请重试' }
+                    ? { ...v, content: t('playground.imageGenerationFailedRetry') }
                     : v
                 ),
               };
@@ -425,14 +428,14 @@ export default function PlaygroundPage() {
         setStreamingMessageId(null);
       }
     },
-    [model, imageConfig, apiType]
+    [model, imageConfig, apiType, t]
   );
 
   // 发送聊天请求
   const sendChatRequest = useCallback(
     async (userContent: string, files?: any[]) => {
       if (!model) {
-        toast.error('请先选择一个模型');
+        toast.error(t('playground.selectModelFirst'));
         return;
       }
 
@@ -440,7 +443,7 @@ export default function PlaygroundPage() {
       let displayContent = userContent;
       if (files && files.length > 0) {
         const fileNames = files.map(f => f.filename || 'attachment').join(', ');
-        displayContent = `${userContent}\n\n[附件: ${fileNames}]`;
+        displayContent = `${userContent}\n\n[${t('playground.attachment')}: ${fileNames}]`;
       }
 
       const userMessage: MessageType = {
@@ -567,7 +570,7 @@ export default function PlaygroundPage() {
           },
           (error) => {
             console.error('Chat error:', error);
-            toast.error(`发送失败: ${error.message}`);
+            toast.error(`${t('playground.sendFailed')}: ${error.message}`);
             setStatus('error');
             setStreamingMessageId(null);
           },
@@ -578,12 +581,12 @@ export default function PlaygroundPage() {
         );
       } catch (error) {
         console.error('Chat error:', error);
-        toast.error('发送失败，请重试');
+        toast.error(t('playground.sendFailedRetry'));
         setStatus('error');
         setStreamingMessageId(null);
       }
     },
-    [model, messages, config, apiType]
+    [model, messages, config, apiType, t]
   );
 
   const handleSubmit = (message: PromptInputMessage) => {
@@ -610,17 +613,17 @@ export default function PlaygroundPage() {
   // 复制消息内容
   const handleCopyMessage = useCallback((content: string) => {
     navigator.clipboard.writeText(content).then(() => {
-      toast.success('已复制到剪贴板');
+      toast.success(t('common.copySuccess'));
     }).catch(() => {
-      toast.error('复制失败');
+      toast.error(t('common.copyFailed'));
     });
-  }, []);
+  }, [t]);
 
   // 删除消息
   const handleDeleteMessage = useCallback((messageKey: string) => {
     setMessages((prev) => prev.filter((msg) => msg.key !== messageKey));
-    toast.success('消息已删除');
-  }, []);
+    toast.success(t('playground.messageDeleted'));
+  }, [t]);
 
   // 开始编辑消息
   const handleStartEdit = useCallback((messageKey: string, versionId: string, content: string) => {
@@ -637,7 +640,7 @@ export default function PlaygroundPage() {
   // 保存编辑
   const handleSaveEdit = useCallback((messageKey: string, versionId: string) => {
     if (!editingContent.trim()) {
-      toast.error('消息内容不能为空');
+      toast.error(t('playground.messageCannotBeEmpty'));
       return;
     }
 
@@ -659,8 +662,8 @@ export default function PlaygroundPage() {
 
     setEditingMessageId(null);
     setEditingContent('');
-    toast.success('消息已更新');
-  }, [editingContent]);
+    toast.success(t('playground.messageUpdated'));
+  }, [editingContent, t]);
 
   // 自动调整 textarea 高度
   useEffect(() => {
@@ -697,8 +700,8 @@ export default function PlaygroundPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('图片已下载');
-  }, []);
+    toast.success(t('playground.imageDownloaded'));
+  }, [t]);
 
   // 重新生成消息
   // 找到对应的用户消息，删除该消息及其后的所有消息，然后重新发送
@@ -725,7 +728,7 @@ export default function PlaygroundPage() {
     }
 
     if (userMessage.from !== 'user') {
-      toast.error('无法找到对应的用户消息');
+      toast.error(t('playground.cannotFindUserMessage'));
       return;
     }
 
@@ -756,7 +759,7 @@ export default function PlaygroundPage() {
       }));
       sendChatRequest(userContent, files);
     }
-  }, [messages, isInImageGenerationMode, sendImageGenerationRequest, sendChatRequest]);
+  }, [messages, isInImageGenerationMode, sendImageGenerationRequest, sendChatRequest, t]);
 
   return (
     <div className="flex gap-4 py-4 md:gap-6 md:py-6 h-[calc(100vh-var(--header-height)-2rem)] px-2 md:px-4 lg:px-6">
@@ -764,7 +767,7 @@ export default function PlaygroundPage() {
       <Card className="hidden lg:flex w-80 shrink-0 flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 pb-8">
-            {isInImageGenerationMode ? '图片生成参数' : '模型参数'}
+            {isInImageGenerationMode ? t('playground.imageGenParams') : t('playground.modelParams')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-12 overflow-y-auto overflow-x-hidden h-full">
@@ -774,8 +777,8 @@ export default function PlaygroundPage() {
               {/* Aspect Ratio */}
               <div className="space-y-4">
                 <Label>
-                  <Tooltip content="生成图片的宽高比。不同的宽高比适合不同的使用场景。">
-                    <span className="cursor-help font-medium">宽高比</span>
+                  <Tooltip content={t('playground.aspectRatioTooltip')}>
+                    <span className="cursor-help font-medium">{t('playground.aspectRatio')}</span>
                   </Tooltip>
                 </Label>
                 <Select
@@ -785,7 +788,7 @@ export default function PlaygroundPage() {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="选择宽高比" />
+                    <SelectValue placeholder={t('playground.selectAspectRatio')} />
                   </SelectTrigger>
                   <SelectContent>
                     {aspectRatioOptions.map((option) => (
@@ -800,8 +803,8 @@ export default function PlaygroundPage() {
               {/* Image Size */}
               <div className="space-y-4">
                 <Label>
-                  <Tooltip content={supportsImageSize(model) ? "生成图片的分辨率。更高的分辨率会产生更清晰的图片，但可能需要更长的生成时间。" : "当前模型不支持图片尺寸控制"}>
-                    <span className={`cursor-help font-medium ${!supportsImageSize(model) ? 'text-muted-foreground' : ''}`}>图片尺寸</span>
+                  <Tooltip content={supportsImageSize(model) ? t('playground.imageSizeTooltip') : t('playground.imageSizeNotSupported')}>
+                    <span className={`cursor-help font-medium ${!supportsImageSize(model) ? 'text-muted-foreground' : ''}`}>{t('playground.imageSize')}</span>
                   </Tooltip>
                 </Label>
                 <Select
@@ -812,7 +815,7 @@ export default function PlaygroundPage() {
                   disabled={!supportsImageSize(model)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="选择图片尺寸" />
+                    <SelectValue placeholder={t('playground.selectImageSize')} />
                   </SelectTrigger>
                   <SelectContent>
                     {imageSizeOptions.map((option) => (
@@ -826,8 +829,8 @@ export default function PlaygroundPage() {
 
               {/* 提示信息 */}
               <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground space-y-2">
-                <div className='flex flex-row'><InfoIcon className='size-4 text-gray-500 shrink-0 mt-0.5 mr-1' /> 你正处于 Imagen 模式</div>
-                <p className='text-xs'>在此模式下，你可以控制图片生成的参数，但每一次生成都是独立上下文。请随时切换到 Chat 模式以连续对话。如果切换，你的聊天内容将被清空，请注意保存生成的图片。</p>
+                <div className='flex flex-row'><InfoIcon className='size-4 text-gray-500 shrink-0 mt-0.5 mr-1' /> {t('playground.imagenModeNotice')}</div>
+                <p className='text-xs'>{t('playground.imagenModeDescription')}</p>
               </div>
             </>
           ) : (
@@ -837,7 +840,7 @@ export default function PlaygroundPage() {
               <div className="space-y-10">
                 <Label>
                   <Tooltip
-                    content="控制输出的随机性。较高的值（如 1.8）会使输出更随机和创造性，较低的值（如 0.2）会使其更确定和专注。"
+                    content={t('playground.temperatureTooltip')}
                   >
                     <span className="cursor-help font-medium">Temperature</span>
                   </Tooltip>
@@ -858,7 +861,7 @@ export default function PlaygroundPage() {
               <div className="space-y-10">
                 <Label htmlFor="maxTokens">
                   <Tooltip
-                    content="生成的最大 token 数量。一个 token 大约相当于 4 个字符或 0.75 个单词。更高的值允许更长的响应，但也会增加成本和延迟。"
+                    content={t('playground.maxTokensTooltip')}
                   >
                     <span className="cursor-help font-medium">Max Tokens</span>
                   </Tooltip>
@@ -878,7 +881,7 @@ export default function PlaygroundPage() {
               <div className="space-y-10">
                 <Label>
                   <Tooltip
-                    content="核采样参数。控制模型考虑的 token 范围。例如，0.1 意味着只考虑概率最高的 10% 的 token。较低的值使输出更确定，较高的值增加多样性。"
+                    content={t('playground.topPTooltip')}
                   >
                     <span className="cursor-help font-medium">Top P</span>
                   </Tooltip>
@@ -899,7 +902,7 @@ export default function PlaygroundPage() {
               <div className="space-y-10">
                 <Label>
                   <Tooltip
-                    content="降低重复相同内容的可能性。正值会根据 token 在文本中出现的频率来惩罚它们，减少逐字重复的可能性。"
+                    content={t('playground.frequencyPenaltyTooltip')}
                   >
                     <span className="cursor-help font-medium">Frequency Penalty</span>
                   </Tooltip>
@@ -920,7 +923,7 @@ export default function PlaygroundPage() {
               <div className="space-y-10">
                 <Label>
                   <Tooltip
-                    content="增加谈论新话题的可能性。正值会根据 token 是否已经出现在文本中来惩罚它们，鼓励模型探索新的主题和概念。"
+                    content={t('playground.presencePenaltyTooltip')}
                   >
                     <span className="cursor-help font-medium">Presence Penalty</span>
                   </Tooltip>
@@ -952,7 +955,7 @@ export default function PlaygroundPage() {
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[85vh] p-0">
             <SheetHeader className="px-6 py-4 border-b">
-              <SheetTitle>{isInImageGenerationMode ? '图片生成参数' : '模型参数'}</SheetTitle>
+              <SheetTitle>{isInImageGenerationMode ? t('playground.imageGenParams') : t('playground.modelParams')}</SheetTitle>
             </SheetHeader>
             <div className="space-y-12 overflow-y-auto overflow-x-hidden h-[calc(100%-4rem)] px-6 py-6">
               {isInImageGenerationMode ? (
@@ -1110,7 +1113,7 @@ export default function PlaygroundPage() {
         </Sheet>
         <StickyBanner className="bg-gradient-to-b from-blue-500 to-blue-600">
           <p className="mx-0 max-w-[90%] text-white drop-shadow-md">
-            我们不会存储您的对话。一旦刷新，这些信息将会丢失。
+            {t('playground.noConversationStored')}
           </p>
         </StickyBanner>
         <Conversation>
@@ -1150,12 +1153,12 @@ export default function PlaygroundPage() {
                                   value={editingContent}
                                   onChange={(e) => setEditingContent(e.target.value)}
                                   className="min-h-[100px] resize-none"
-                                  placeholder="编辑消息内容..."
+                                  placeholder={t('playground.editMessagePlaceholder')}
                                 />
                                 <div className="flex gap-2">
                                   <MessageAction
                                     onClick={() => handleSaveEdit(message.key, version.id)}
-                                    tooltip="保存"
+                                    tooltip={t('common.save')}
                                     size="sm"
                                     variant="default"
                                   >
@@ -1163,7 +1166,7 @@ export default function PlaygroundPage() {
                                   </MessageAction>
                                   <MessageAction
                                     onClick={handleCancelEdit}
-                                    tooltip="取消"
+                                    tooltip={t('common.cancel')}
                                     size="sm"
                                     variant="outline"
                                   >
@@ -1178,7 +1181,7 @@ export default function PlaygroundPage() {
                                   <ImageGeneration>
                                     <img
                                       src={`data:${version.generatedImage.mimeType};base64,${version.generatedImage.data}`}
-                                      alt="生成的图片"
+                                      alt={t('playground.generatedImage')}
                                       className="max-w-full h-auto object-cover"
                                       style={{ maxHeight: '512px' }}
                                     />
@@ -1189,7 +1192,7 @@ export default function PlaygroundPage() {
                                     <Spinner />
                                     {isInImageGenerationMode && (
                                       <span className="text-sm text-muted-foreground">
-                                        图片生成中，这可能需要至多需要数分钟来完成。
+                                        {t('playground.imageGenerating')}
                                       </span>
                                     )}
                                   </div>
@@ -1210,20 +1213,20 @@ export default function PlaygroundPage() {
                                   <>
                                     <MessageAction
                                       onClick={() => handleRegenerate(message.key)}
-                                      tooltip="重新生成"
+                                      tooltip={t('playground.regenerate')}
                                       disabled={status === 'streaming'}
                                     >
                                       <RefreshCwIcon className="size-4" />
                                     </MessageAction>
                                     <MessageAction
                                       onClick={() => handleDownloadImage(version.generatedImage!.data, version.generatedImage!.mimeType)}
-                                      tooltip="下载图片"
+                                      tooltip={t('playground.downloadImage')}
                                     >
                                       <DownloadIcon className="size-4" />
                                     </MessageAction>
                                     <MessageAction
                                       onClick={() => handleDeleteMessage(message.key)}
-                                      tooltip="删除"
+                                      tooltip={t('common.delete')}
                                       variant="ghost"
                                       className="hover:text-destructive"
                                     >
@@ -1235,26 +1238,26 @@ export default function PlaygroundPage() {
                                   <>
                                     <MessageAction
                                       onClick={() => handleRegenerate(message.key)}
-                                      tooltip="重新生成"
+                                      tooltip={t('playground.regenerate')}
                                       disabled={status === 'streaming'}
                                     >
                                       <RefreshCwIcon className="size-4" />
                                     </MessageAction>
                                     <MessageAction
                                       onClick={() => handleCopyMessage(version.content)}
-                                      tooltip="复制"
+                                      tooltip={t('common.copy')}
                                     >
                                       <CopyIcon className="size-4" />
                                     </MessageAction>
                                     <MessageAction
                                       onClick={() => handleStartEdit(message.key, version.id, version.content)}
-                                      tooltip="编辑"
+                                      tooltip={t('common.edit')}
                                     >
                                       <EditIcon className="size-4" />
                                     </MessageAction>
                                     <MessageAction
                                       onClick={() => handleDeleteMessage(message.key)}
-                                      tooltip="删除"
+                                      tooltip={t('common.delete')}
                                       variant="ghost"
                                       className="hover:text-destructive"
                                     >
@@ -1299,7 +1302,7 @@ export default function PlaygroundPage() {
                         <PlusIcon className="size-4" />
                       </PromptInputActionMenuTrigger>
                       <PromptInputActionMenuContent>
-                        <PromptInputActionAddAttachments label="添加图片" />
+                        <PromptInputActionAddAttachments label={t('playground.addImage')} />
                       </PromptInputActionMenuContent>
                     </PromptInputActionMenu>
                     <ModelSelector
@@ -1319,15 +1322,15 @@ export default function PlaygroundPage() {
                         </PromptInputButton>
                       </ModelSelectorTrigger>
                       <ModelSelectorContent>
-                        <ModelSelectorInput placeholder="搜索模型..." />
+                        <ModelSelectorInput placeholder={t('playground.searchModels')} />
                         <ModelSelectorList>
                           {allModels.length === 0 ? (
                             <div className="p-4 text-center text-sm text-muted-foreground">
-                              暂无可用模型
+                              {t('playground.noModelsAvailable')}
                             </div>
                           ) : (
                             <>
-                              <ModelSelectorEmpty>未找到模型。</ModelSelectorEmpty>
+                              <ModelSelectorEmpty>{t('playground.noModelsFound')}</ModelSelectorEmpty>
                               {/* Antigravity 模型组 */}
                               <ModelSelectorGroup heading="Antigravity">
                                 {allModels
