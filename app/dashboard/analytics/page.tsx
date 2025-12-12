@@ -314,7 +314,7 @@ export default function AnalyticsPage() {
                         <TableHead className="min-w-[180px]">{t('analytics.modelName')}</TableHead>
                         <TableHead className="min-w-[100px]">{t('analytics.currentQuota')}</TableHead>
                         <TableHead className="min-w-[100px]">{t('analytics.maxQuota')}</TableHead>
-                        <TableHead className="min-w-[80px]">{t('analytics.usage Rate')}</TableHead>
+                        <TableHead className="min-w-[80px]">{t('analytics.usageRate')}</TableHead>
                         <TableHead className="min-w-[150px]">{t('analytics.lastUpdated')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -357,13 +357,13 @@ export default function AnalyticsPage() {
           </Card>
         )}
 
-        {/* 反重力使用记录 */}
+        {/* Antigravity Usage Records */}
         {activeTab === 'antigravity' && (
           <Card>
             <CardHeader>
-              <CardTitle>使用记录</CardTitle>
+              <CardTitle>{t('analytics.usageRecords')}</CardTitle>
               <CardDescription>
-                共 {antigravityTotalRecords} 条使用记录
+                {t('analytics.totalRecordsCount', { count: antigravityTotalRecords })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -400,7 +400,7 @@ export default function AnalyticsPage() {
                             </TableCell>
                             <TableCell>
                               <Badge variant={consumption.is_shared === 1 ? 'default' : 'secondary'} className="whitespace-nowrap">
-                                {consumption.is_shared === 1 ? '共享' : '专属'}
+                                {consumption.is_shared === 1 ? t('accounts.shared') : t('accounts.dedicated')}
                               </Badge>
                             </TableCell>
                             <TableCell className="font-mono text-sm whitespace-nowrap">
@@ -513,12 +513,12 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            {/* 使用记录 */}
+            {/* Usage Records */}
             <Card>
               <CardHeader>
-                <CardTitle>使用记录</CardTitle>
+                <CardTitle>{t('analytics.usageRecords')}</CardTitle>
                 <CardDescription>
-                  共 {totalRecords} 条使用记录
+                  {t('analytics.totalRecordsCount', { count: totalRecords })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -557,7 +557,7 @@ export default function AnalyticsPage() {
                               </TableCell>
                               <TableCell>
                                 <Badge variant={log.is_shared === 1 ? 'default' : 'secondary'} className="whitespace-nowrap">
-                                  {log.is_shared === 1 ? '共享' : '专属'}
+                                  {log.is_shared === 1 ? t('accounts.shared') : t('accounts.dedicated')}
                                 </Badge>
                               </TableCell>
                               <TableCell className="font-mono text-sm whitespace-nowrap">

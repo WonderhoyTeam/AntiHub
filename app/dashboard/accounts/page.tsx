@@ -244,15 +244,15 @@ export default function AccountsPage() {
 
   const handleToggleAccountType = (account: Account) => {
     const newIsShared = account.is_shared === 1 ? 0 : 1;
-    const typeText = newIsShared === 1 ? '共享' : '专属';
-    
+    const typeText = newIsShared === 1 ? t('accounts.shared') : t('accounts.dedicated');
+
     showConfirmDialog({
-      title: `转换确认`,
+      title: t('accounts.convertConfirm'),
       description: newIsShared === 1
-        ? '转换为共享账号后，此账号将加入共享配额池供他人使用，你将获得两倍于当前账号配额的共享配额奖励。确实要继续吗？'
-        : '转换为专属账号后，此账号将仅供你个人使用，你的共享配额池可用配额将会相应减少。确实要继续吗？',
-      confirmText: '继续',
-      cancelText: '取消',
+        ? t('accounts.convertToSharedDesc')
+        : t('accounts.convertToDedicatedDesc'),
+      confirmText: t('accounts.continue'),
+      cancelText: t('common.cancel'),
       onConfirm: async () => {
         try {
           await updateAccountType(account.cookie_id, newIsShared);
@@ -262,14 +262,14 @@ export default function AccountsPage() {
               : a
           ));
           toasterRef.current?.show({
-            title: '类型已更新',
-            message: `账号已转换为${typeText}账号`,
+            title: t('accounts.typeUpdated'),
+            message: newIsShared === 1 ? t('accounts.convertedToShared') : t('accounts.convertedToDedicated'),
             variant: 'success',
             position: 'top-right',
           });
         } catch (err) {
           toasterRef.current?.show({
-            title: '转换失败',
+            title: t('accounts.convertTypeFailed'),
             message: err instanceof Error ? err.message : t('accounts.convertTypeFailed'),
             variant: 'error',
             position: 'top-right',
@@ -770,7 +770,7 @@ export default function AccountsPage() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleToggleAccountType(account)}>
                                     <IconArrowsExchange className="size-4 mr-2" />
-                                    转为{account.is_shared === 1 ? '专属' : '共享'}
+                                    {t('accounts.convertTo', { type: account.is_shared === 1 ? t('accounts.dedicated') : t('accounts.shared') })}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleToggleStatus(account)}>
                                     {account.status === 1 ? (
@@ -814,7 +814,7 @@ export default function AccountsPage() {
                 <Badge1 variant="turbo">Beta</Badge1>
               </CardTitle>
               <CardDescription className="text-left">
-                共 {kiroAccounts.length} 个账号
+                {t('accounts.totalAccounts', { count: kiroAccounts.length })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -828,13 +828,13 @@ export default function AccountsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="min-w-[100px]">账号ID</TableHead>
-                        <TableHead className="min-w-[150px]">账号名称</TableHead>
-                        <TableHead className="min-w-[100px]">余额</TableHead>
-                        <TableHead className="min-w-[80px]">类型</TableHead>
-                        <TableHead className="min-w-[80px]">状态</TableHead>
-                        <TableHead className="min-w-[100px]">添加时间</TableHead>
-                        <TableHead className="text-right min-w-[80px]">操作</TableHead>
+                        <TableHead className="min-w-[100px]">{t('accounts.accountId')}</TableHead>
+                        <TableHead className="min-w-[150px]">{t('accounts.accountName')}</TableHead>
+                        <TableHead className="min-w-[100px]">{t('accounts.balance')}</TableHead>
+                        <TableHead className="min-w-[80px]">{t('accounts.accountType')}</TableHead>
+                        <TableHead className="min-w-[80px]">{t('accounts.status')}</TableHead>
+                        <TableHead className="min-w-[100px]">{t('accounts.addedTime')}</TableHead>
+                        <TableHead className="text-right min-w-[80px]">{t('accounts.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -849,16 +849,16 @@ export default function AccountsPage() {
                           <TableCell className="font-mono text-sm">
                             {kiroBalances[account.account_id] !== undefined
                               ? `$${kiroBalances[account.account_id].toFixed(2)}`
-                              : '加载中...'}
+                              : t('common.loading')}
                           </TableCell>
                           <TableCell>
                             <Badge variant={account.is_shared === 1 ? 'default' : 'secondary'} className="whitespace-nowrap">
-                              {account.is_shared === 1 ? '共享' : '专属'}
+                              {account.is_shared === 1 ? t('accounts.shared') : t('accounts.dedicated')}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant={account.status === 1 ? 'default' : 'outline'} className="whitespace-nowrap">
-                              {account.status === 1 ? '启用' : '禁用'}
+                              {account.status === 1 ? t('accounts.enabled') : t('accounts.disabled')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -878,18 +878,18 @@ export default function AccountsPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleRenameKiro(account)}>
                                   <IconEdit className="size-4 mr-2" />
-                                  重命名
+                                  {t('accounts.rename')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleToggleKiroStatus(account)}>
                                   {account.status === 1 ? (
                                     <>
                                       <IconToggleLeft className="size-4 mr-2" />
-                                      禁用
+                                      {t('accounts.disable')}
                                     </>
                                   ) : (
                                     <>
                                       <IconToggleRight className="size-4 mr-2" />
-                                      启用
+                                      {t('accounts.enable')}
                                     </>
                                   )}
                                 </DropdownMenuItem>
@@ -898,7 +898,7 @@ export default function AccountsPage() {
                                   className="text-red-600"
                                 >
                                   <IconTrash className="size-4 mr-2" />
-                                  删除
+                                  {t('common.delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

@@ -18,6 +18,8 @@
     "back": "返回",
     "next": "下一步",
     "previous": "上一步",
+    "nextPage": "下一页",
+    "previousPage": "上一页",
     "submit": "提交",
     "reset": "重置",
     "create": "创建",
@@ -239,7 +241,8 @@
     "addImage": "添加图片",
     "searchModels": "搜索模型...",
     "noModelsAvailable": "暂无可用模型",
-    "noModelsFound": "未找到模型。"
+    "noModelsFound": "未找到模型。",
+    "inputPlaceholder": "想聊些什么？"
   },
   "settings": {
     "title": "设置",
@@ -370,6 +373,8 @@
     "dedicatedAccountConsumption": "专属账号消费",
     "noConsumptionData": "暂无消费数据",
     "noUsageRecords": "暂无使用记录",
+    "usageRecords": "使用记录",
+    "totalRecordsCount": "共 {{count}} 条使用记录",
     "createApiKeyToStart": "立即创建您的 API Key 开始对话吧！",
     "startUsingKiro": "开始使用Kiro账号进行对话吧！",
     "accountName": "账号名称",

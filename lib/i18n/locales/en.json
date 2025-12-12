@@ -18,6 +18,8 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
+    "nextPage": "Next",
+    "previousPage": "Previous",
     "submit": "Submit",
     "reset": "Reset",
     "create": "Create",
@@ -239,7 +241,8 @@
     "addImage": "Add Image",
     "searchModels": "Search models...",
     "noModelsAvailable": "No models available",
-    "noModelsFound": "No models found."
+    "noModelsFound": "No models found.",
+    "inputPlaceholder": "What would you like to chat about?"
   },
   "settings": {
     "title": "Settings",
@@ -370,6 +373,8 @@
     "dedicatedAccountConsumption": "Dedicated Account Consumption",
     "noConsumptionData": "No consumption data",
     "noUsageRecords": "No usage records",
+    "usageRecords": "Usage Records",
+    "totalRecordsCount": "{{count}} records total",
     "createApiKeyToStart": "Create your API Key to start chatting!",
     "startUsingKiro": "Start chatting with Kiro accounts!",
     "accountName": "Account Name",
