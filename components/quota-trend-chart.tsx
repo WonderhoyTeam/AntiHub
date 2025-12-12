@@ -27,6 +27,12 @@ import {
 } from "@/components/ui/select"
 import { useTranslation } from "@/lib/i18n/hooks"
 
+interface TrendDataPoint {
+  time: string
+  quota_consumed: number
+  count: number
+}
+
 export function QuotaTrendChart() {
   const { t, locale } = useTranslation()
 

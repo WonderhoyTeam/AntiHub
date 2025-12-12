@@ -16,7 +16,8 @@ import {
   getKiroAccountBalance,
   getCurrentUser,
   type Account,
-  type KiroAccount
+  type KiroAccount,
+  type KiroAccountBalance
 } from '@/lib/api';
 import { AddAccountDrawer } from '@/components/add-account-drawer';
 import { Button } from '@/components/ui/button';
@@ -97,7 +98,7 @@ export default function AccountsPage() {
   // Kiro 账号详情 Dialog 状态
   const [isKiroDetailDialogOpen, setIsKiroDetailDialogOpen] = useState(false);
   const [detailAccount, setDetailAccount] = useState<KiroAccount | null>(null);
-  const [detailBalance, setDetailBalance] = useState<Record<string, unknown> | null>(null);
+  const [detailBalance, setDetailBalance] = useState<KiroAccountBalance | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   // 确认对话框状态
